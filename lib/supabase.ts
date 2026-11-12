@@ -47,7 +47,11 @@ export async function sendCode(email: string) {
   if (!sb) throw new Error("Accounts are not set up yet.");
   const { error } = await sb.auth.signInWithOtp({
     email: email.trim(),
-    options: { shouldCreateUser: true },
+    options: {
+      shouldCreateUser: true,
+      // Free Supabase projects send a link instead of a code; it lands back here signed in.
+      emailRedirectTo: `${window.location.origin}/settings`,
+    },
   });
   if (error) throw new Error(error.message);
 }

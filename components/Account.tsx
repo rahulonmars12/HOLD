@@ -70,8 +70,12 @@ export function SignIn({ intro }: { intro?: string }) {
         </>
       ) : (
         <>
+          <p className="mb-3 text-sm leading-relaxed">
+            Check <strong>{email}</strong>. Tap the link in the email on this device, or type the code
+            if the email has one.
+          </p>
           <label htmlFor="code" className="label">
-            Code sent to {email}
+            Code
           </label>
           <input
             id="code"
