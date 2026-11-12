@@ -89,7 +89,7 @@ function Reveal({ persona }: { persona: Persona }) {
 
   return (
     <section className="relative overflow-hidden pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]" style={{ background: info.tint }}>
-      <Aurora colors={PERSONA_COLORS[persona.id]} tone="light" />
+      <Aurora colors={PERSONA_COLORS[persona.id]} base={info.tint} />
       <Close />
       <div className="relative flex flex-col items-center px-5 text-center">
         <p className="rise-1 flex h-9 items-center rounded-full bg-white/80 px-4 text-sm font-bold">Your climbing persona</p>

@@ -525,7 +525,7 @@ function PersonaCard({ data }: { data: Data }) {
   const dash = PERSONAS[result.persona.dash];
   return (
     <Link href="/persona" className="relative mt-4 block overflow-hidden rounded-[1.875rem] px-4 pb-4 pt-3" style={{ background: info.tint }}>
-      <Aurora colors={PERSONA_COLORS[info.id]} tone="light" />
+      <Aurora colors={PERSONA_COLORS[info.id]} base={info.tint} />
       <span className="relative flex items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={personaImage(info.id)} alt="" width={104} height={104} className="bob -ml-1 flex-none" />

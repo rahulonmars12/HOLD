@@ -16,11 +16,11 @@ const BLOBS = [
 
 export function Aurora({
   colors,
-  base = "#120F2C",
-  tone = "dark",
+  base = "#F3F5FC",
+  tone = "light",
   fast = false,
   rainbow = false,
-  particles = tone === "dark",
+  particles = false,
   className = "",
 }: {
   colors: string[];
@@ -37,7 +37,7 @@ export function Aurora({
     <div
       aria-hidden
       className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
-      style={tone === "dark" ? { background: base } : undefined}
+      style={{ background: base }}
     >
       <div className={`absolute inset-0 ${rainbow ? "aurora-rainbow" : ""}`}>
         {BLOBS.map((b, i) => {
@@ -54,8 +54,8 @@ export function Aurora({
                 maxWidth: 820,
                 maxHeight: 820,
                 background: `radial-gradient(circle at 50% 50%, ${color} 0%, ${color}00 60%)`,
-                mixBlendMode: tone === "dark" ? "screen" : "multiply",
-                opacity: tone === "dark" ? 0.95 : 0.5,
+                mixBlendMode: tone === "dark" ? "screen" : "normal",
+                opacity: tone === "dark" ? 0.95 : 0.85,
                 animation: `${b.anim} ease-in-out infinite alternate`,
                 animationDuration: fast ? "1.6s" : undefined,
               }}
@@ -63,13 +63,11 @@ export function Aurora({
           );
         })}
       </div>
-      {tone === "dark" && (
-        // Darker in the middle so the coin or character stands out.
-        <span
-          className="absolute inset-0"
-          style={{ background: `radial-gradient(48% 34% at 50% 34%, ${base}CC, ${base}00 100%)` }}
-        />
-      )}
+      {/* Calmer in the middle so the coin or character stands out. */}
+      <span
+        className="absolute inset-0"
+        style={{ background: `radial-gradient(46% 30% at 50% 33%, ${base}B3, ${base}00 100%)` }}
+      />
       {particles && <Particles />}
     </div>
   );
@@ -84,7 +82,7 @@ const SPARKS = Array.from({ length: 22 }, (_, i) => {
     delay: -r(4) * 10,
     sway: Math.round((r(5) - 0.5) * 60),
     star: i % 3 === 0,
-    color: ["#FFFFFF", "#FFDD55", "#FF9CC2", "#7EB3FF", "#5FDDB0", "#B79BFF"][i % 6],
+    color: ["#FF9CC2", "#FFC93C", "#7EB3FF", "#3FC998", "#B79BFF", "#FFA45C"][i % 6],
   };
 });
 
@@ -110,7 +108,7 @@ function Particles() {
               <path d="M10 0 C11 7 13 9 20 10 C13 11 11 13 10 20 C9 13 7 11 0 10 C7 9 9 7 10 0 Z" fill={p.color} />
             </svg>
           ) : (
-            <span className="block rounded-full" style={{ width: p.size, height: p.size, background: p.color, opacity: 0.85 }} />
+            <span className="block rounded-full" style={{ width: p.size, height: p.size, background: p.color, opacity: 0.7 }} />
           )}
         </span>
       ))}
@@ -149,18 +147,21 @@ export function Burst({ color = "#FFFFFF", delay = 0 }: { color?: string; delay?
   );
 }
 
-/** Background colours that contrast with each rarity's rim. */
+/** Light pastel backgrounds that contrast with each rarity's rim. */
 export const RARITY_BG: Record<string, { base: string; colors: string[]; halo: string[] }> = {
-  bronze: { base: "#0E1A30", colors: ["#1FB5C9", "#3B82F6", "#22D3A6", "#6366F1"], halo: ["#22D3EE", "#3B82F6", "#34D399"] },
-  silver: { base: "#1A0E30", colors: ["#FF4F9A", "#A855F7", "#F97316", "#EC4899"], halo: ["#FF4F9A", "#A855F7", "#FB923C"] },
-  gold: { base: "#140F35", colors: ["#7C3AED", "#2563EB", "#DB2777", "#4F46E5"], halo: ["#8B5CF6", "#3B82F6", "#EC4899"] },
-  holo: { base: "#0F0C26", colors: ["#FF4F9A", "#3B82F6", "#22D3A6", "#FACC15", "#A855F7"], halo: ["#FF4F9A", "#FACC15", "#22D3A6", "#3B82F6", "#A855F7"] },
+  bronze: { base: "#F1F8FF", colors: ["#A8E8D8", "#B4D2FF", "#C9F3E3", "#C4C2FF"], halo: ["#5FDDB0", "#7EB3FF", "#B79BFF"] },
+  silver: { base: "#FFF4F8", colors: ["#FFC2DB", "#DCCBFF", "#FFD4B5", "#FFB8D2"], halo: ["#FF9CC2", "#B79BFF", "#FFA45C"] },
+  gold: { base: "#F5F2FF", colors: ["#D3C6FF", "#BCD6FF", "#FFC9E1", "#C9CEFF"], halo: ["#B79BFF", "#7EB3FF", "#FF9CC2"] },
+  holo: { base: "#F8F6FF", colors: ["#FFC2DB", "#BCD6FF", "#BFF0DD", "#FFEA9C", "#DCCBFF"], halo: ["#FF9CC2", "#FFDD55", "#5FDDB0", "#7EB3FF", "#B79BFF"] },
 };
 
-/** Warm characters get cool backgrounds and the other way round. */
+/** Warm characters get cool pastels and the other way round. */
 const WARM = new Set(["monkey", "squirrel", "cat", "octopus", "goat"]);
 export function personaBg(id: string) {
   return WARM.has(id)
-    ? { base: "#0E1A30", colors: ["#3B82F6", "#22D3A6", "#6366F1", "#1FB5C9"], halo: ["#3B82F6", "#22D3EE", "#8B5CF6"] }
-    : { base: "#1A0E30", colors: ["#FF4F9A", "#F97316", "#A855F7", "#FACC15"], halo: ["#FF4F9A", "#FB923C", "#A855F7"] };
+    ? { base: "#F1F6FF", colors: ["#B4D2FF", "#A8E8D8", "#C4C2FF", "#BCE3FF"], halo: ["#7EB3FF", "#5FDDB0", "#B79BFF"] }
+    : { base: "#FFF5F7", colors: ["#FFC2DB", "#FFD4B5", "#DCCBFF", "#FFEA9C"], halo: ["#FF9CC2", "#FFA45C", "#B79BFF"] };
 }
+
+/** The pastels an evolution builds up through. */
+export const EVOLVE_COLORS = ["#DCCBFF", "#BCD6FF", "#FFC2DB", "#FFFFFF"];

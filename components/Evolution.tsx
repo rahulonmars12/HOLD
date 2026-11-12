@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { PERSONAS, personaImage, type PersonaId } from "@/lib/persona";
-import { Aurora, Burst, Halo, personaBg } from "./Aurora";
+import { Aurora, Burst, EVOLVE_COLORS, Halo, personaBg } from "./Aurora";
 import { evolveSound, sfx } from "@/lib/sfx";
 import { Hold } from "./Hold";
 
@@ -24,7 +24,7 @@ const SWAPS = (() => {
 const INTRO_MS = 1500;
 const MORPH_MS = SWAPS[SWAPS.length - 1] + 120;
 
-const SILHOUETTE = "brightness(0) invert(1) drop-shadow(0 0 22px rgb(255 255 255 / 0.85))";
+const SILHOUETTE = "brightness(0) drop-shadow(0 0 18px rgb(255 255 255 / 0.95))";
 
 /**
  * The persona change, told like a creature evolving: the old persona glows,
@@ -73,19 +73,20 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
       role="dialog"
       aria-modal="true"
       aria-label={`You now climb like ${toInfo.article} ${toInfo.name}`}
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-[#141230] px-6 text-center text-white"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-wall px-6 text-center text-ink"
     >
       <Aurora
         colors={
           phase === "done"
             ? personaBg(to).colors
             : morphing
-              ? ["#FFFFFF", "#A855F7", "#3B82F6", "#FF4F9A"]
+              ? EVOLVE_COLORS
               : from === "new"
-                ? ["#7C3AED", "#3B82F6", "#DB2777"]
+                ? ["#FFEA9C", "#DCCBFF", "#BCD6FF"]
                 : personaBg(from).colors
         }
-        base={phase === "done" ? personaBg(to).base : "#120F2C"}
+        base={phase === "done" ? personaBg(to).base : "#F5F3FF"}
+        particles
         fast={morphing}
       />
       <p className="relative min-h-14 max-w-[18rem] text-lg font-bold leading-snug">
@@ -117,11 +118,11 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
               {from === "new" ? (
                 <Hold
                   kind="jug"
-                  fill={morphing ? "#FFFFFF" : "#FFDD55"}
-                  shade={morphing ? "#FFFFFF" : "#E8BE2A"}
-                  bolt={morphing ? "#FFFFFF" : undefined}
+                  fill={morphing ? "#1E1B3A" : "#FFDD55"}
+                  shade={morphing ? "#1E1B3A" : "#E8BE2A"}
+                  bolt={morphing ? "#1E1B3A" : undefined}
                   size={200}
-                  style={morphing ? { filter: "drop-shadow(0 0 22px rgb(255 255 255 / 0.85))" } : undefined}
+                  style={morphing ? { filter: "drop-shadow(0 0 18px rgb(255 255 255 / 0.95))" } : undefined}
                 />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -145,10 +146,10 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
         {phase === "done" && (
           <>
             <p className="rise-1 text-lg font-bold">You now climb like {toInfo.article}</p>
-            <p className="rise-1 display mt-1 text-[2.75rem] leading-none" style={{ color: toInfo.tint }}>
+            <p className="rise-1 display mt-1 text-[2.75rem] leading-none">
               {toInfo.name}
             </p>
-            <p className="rise-2 mx-auto mt-3 max-w-[18rem] text-[0.9375rem] leading-relaxed text-white/80">{toInfo.line}</p>
+            <p className="rise-2 mx-auto mt-3 max-w-[18rem] text-[0.9375rem] leading-relaxed text-ink/80">{toInfo.line}</p>
           </>
         )}
       </div>
@@ -159,7 +160,7 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
             See why
           </button>
         ) : (
-          <button type="button" className="mx-auto block min-h-11 px-4 text-sm font-semibold text-white/60" onClick={onDone} data-sfx="none">
+          <button type="button" className="mx-auto block min-h-11 px-4 text-sm font-semibold text-ink/60" onClick={onDone} data-sfx="none">
             Skip
           </button>
         )}

@@ -59,28 +59,28 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
       role="dialog"
       aria-modal="true"
       aria-label={`Achievement unlocked: ${def.name}`}
-      className="fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-[#141230] px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-white"
+      className="fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-wall px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-ink"
     >
-      <Aurora colors={RARITY_BG[def.rarity].colors} base={RARITY_BG[def.rarity].base} rainbow={def.rarity === "holo"} />
-      <p className="relative flex h-9 items-center rounded-full bg-white/20 px-4 text-sm font-bold backdrop-blur">Achievement unlocked</p>
+      <Aurora colors={RARITY_BG[def.rarity].colors} base={RARITY_BG[def.rarity].base} rainbow={def.rarity === "holo"} particles />
+      <p className="relative flex h-9 items-center rounded-full bg-white/75 px-4 text-sm font-bold backdrop-blur">Achievement unlocked</p>
       <div className="relative mt-8">
         <Halo colors={RARITY_BG[def.rarity].halo} size={310} className={locked ? "" : "halo-fast"} />
         {locked && <Burst delay={0} />}
-        <div className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: "drop-shadow(0 22px 30px rgb(0 0 0 / 0.45))" }}>
+        <div className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: "drop-shadow(0 18px 24px rgb(30 27 58 / 0.25))" }}>
           <Badge id={id} size={250} assemble label={def.name} />
         </div>
       </div>
       <div className={`relative mt-6 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`}>
-        <p className="text-sm font-bold text-white/70">No. {String(def.no).padStart(2, "0")} of 27</p>
+        <p className="text-sm font-bold text-ink/70">No. {String(def.no).padStart(2, "0")} of 27</p>
         <h1 className="display mt-1 text-[2.25rem] leading-tight">{def.name}</h1>
-        <p className="mx-auto mt-2 max-w-[18rem] text-[0.9375rem] leading-relaxed text-white/80">{def.done}</p>
+        <p className="mx-auto mt-2 max-w-[18rem] text-[0.9375rem] leading-relaxed text-ink/80">{def.done}</p>
         <span
-          className="mt-3 inline-flex h-8 items-center rounded-full px-3.5 text-sm font-bold text-ink"
+          className="mt-3 inline-flex h-8 items-center rounded-full px-3.5 text-sm font-bold text-ink shadow-[inset_0_0_0_1.5px_rgb(30_27_58/0.12)]"
           style={{ background: RARITY_PILL[def.rarity] }}
         >
           {RARITY_LABEL[def.rarity]}
         </span>
-        {more > 0 && <p className="mt-3 text-sm font-semibold text-white/70">+ {more} more in your collection</p>}
+        {more > 0 && <p className="mt-3 text-sm font-semibold text-ink/70">+ {more} more in your collection</p>}
       </div>
       {shown && <HoldRain />}
       <div className="absolute inset-x-5 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]">
@@ -89,7 +89,7 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
             Nice!
           </button>
         ) : (
-          <button type="button" className="mx-auto block min-h-11 px-4 text-sm font-semibold text-white/60" onClick={onDone} data-sfx="none">
+          <button type="button" className="mx-auto block min-h-11 px-4 text-sm font-semibold text-ink/60" onClick={onDone} data-sfx="none">
             Skip
           </button>
         )}
