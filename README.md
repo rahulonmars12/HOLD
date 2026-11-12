@@ -24,9 +24,10 @@ take and write your beta. After the send, say whether the read held up.
 style, why you fall, and how good your reads are, for 30 days, 90 days or
 all time.
 
-**Accounts and sync.** Sign in with a six-digit email code. Every change is
-saved on the phone first and synced in the background; the newest edit wins.
-Signing out clears the phone but keeps everything in your account.
+**Accounts and sync.** Create an account in the app with a username and
+password; no email is involved. Every change is saved on the phone first and
+synced in the background; the newest edit wins. Signing out clears the phone
+but keeps everything in your account.
 
 **AI coach.** On a climb: a short read of your attempts and what to try
 next, and you can ask it a question. On Insights: what to practise based on
@@ -51,35 +52,37 @@ The service worker (offline support) only registers in production builds.
 ## Turn on accounts, sync and buddies (Supabase)
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the project, open **SQL Editor**, paste the contents of
-   `supabase/migrations/0001_tickmark.sql`, and run it. This creates the
-   tables, the access rules (you and your accepted buddies only) and the
-   `photos` storage bucket.
-3. Open **Authentication → Emails → Templates → Magic Link** and make sure
-   the email contains the code, for example:
-
-   ```html
-   <h2>Your HOLD! code</h2>
-   <p>Enter this code in the app: <strong>{{ .Token }}</strong></p>
-   ```
-
-4. Open **Authentication → URL Configuration** and set the Site URL to your
-   Vercel URL.
-5. Open **Project Settings → API Keys** and copy the Project URL and the
-   publishable key (`sb_publishable_…`).
-6. In Vercel, open the project → **Settings → Environment Variables** and add:
+2. Open **SQL Editor**, paste `supabase/migrations/0001_tickmark.sql`, and
+   run it. Then do the same with `supabase/migrations/0002_username_accounts.sql`.
+   These create the tables, the access rules (you and your accepted buddies
+   only) and the `photos` storage bucket.
+3. Open **Authentication → Sign In / Providers → Email**. Keep the Email
+   provider on, turn **Confirm email** off, and save. Accounts are a username
+   and password; behind the scenes each one gets an address on the reserved
+   `.invalid` domain, which never receives mail, so nothing is ever emailed.
+4. Open **Project Settings → API Keys** and copy the publishable key
+   (`sb_publishable_…`), and the Project URL (under **Data API**, or the
+   **Connect** button).
+5. In Vercel, open the project → **Settings → Environment Variables** and add:
 
    | Name | Value |
    | --- | --- |
    | `NEXT_PUBLIC_SUPABASE_URL` | the Project URL |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the publishable key |
 
-7. Redeploy (Deployments → ⋯ → Redeploy). These values are built into the
+6. Redeploy (Deployments → ⋯ → Redeploy). These values are built into the
    app, so they only take effect after a new deploy.
+7. In HOLD!, open Settings → Account → **New account**.
 
-Supabase's built-in email sender is limited to a few emails an hour, which
-is fine for you and a few buddies. For more, add your own SMTP server under
-Authentication → Emails.
+**Forgotten passwords.** There is no email reset. Signed in, anyone can change
+their password in Settings. If a buddy is locked out, set a new one for them in
+the Supabase SQL Editor:
+
+```sql
+update auth.users
+set encrypted_password = crypt('their-new-password', gen_salt('bf'))
+where email = 'their_username@hold.invalid';
+```
 
 ## Turn on the AI coach (Anthropic)
 

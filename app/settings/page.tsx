@@ -1,14 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ProfileForm, SignIn, useProfile } from "@/components/Account";
+import { PasswordForm, ProfileForm, SignIn, useProfile } from "@/components/Account";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { CornerHold } from "@/components/Hold";
 import { clearAll, exportBackup, forgetDevice, parseBackup, removeCustomColor, restoreBackup } from "@/lib/db";
 import { buildDemo } from "@/lib/demo";
 import { plural, timeLabel } from "@/lib/format";
 import { useCustomColors, useData } from "@/lib/hooks";
-import { supabase } from "@/lib/supabase";
+import { supabase, usernameOf } from "@/lib/supabase";
 import { syncNow, useSyncStatus } from "@/lib/sync";
 
 export default function SettingsPage() {
@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   if (!data) return null;
 
   const hasData = data.sessions.length + data.climbs.length > 0;
@@ -81,15 +82,16 @@ export default function SettingsPage() {
         ) : (
           <>
             <p className="mt-2 text-[0.9375rem]">
-              Signed in as <strong>{auth.user.email}</strong>
-              {profile?.username && (
-                <>
-                  , <strong>@{profile.username}</strong>
-                </>
-              )}
+              Signed in as <strong>@{profile?.username ?? usernameOf(auth)}</strong>
             </p>
             <p className={`mt-1 text-sm ${sync.state === "error" ? "font-semibold text-danger" : "muted"}`}>{syncLine}</p>
-            {editingProfile || (profile !== undefined && !profile?.username) ? (
+            {changingPassword ? (
+              <div className="mt-4">
+                <PasswordForm
+                  onDone={() => setChangingPassword(false)}
+                />
+              </div>
+            ) : editingProfile || (profile !== undefined && !profile?.username) ? (
               <div className="mt-4">
                 <ProfileForm
                   profile={profile ?? null}
@@ -105,7 +107,10 @@ export default function SettingsPage() {
                   Sync now
                 </button>
                 <button type="button" className="btn btn-soft flex-1" onClick={() => setEditingProfile(true)}>
-                  Edit profile
+                  Edit name
+                </button>
+                <button type="button" className="btn btn-soft w-full" onClick={() => setChangingPassword(true)}>
+                  Change password
                 </button>
               </div>
             )}
