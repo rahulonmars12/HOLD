@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { sfx } from "@/lib/sfx";
 
 /** A bottom sheet built on the native dialog, so focus and Escape just work. */
 export function Sheet({
@@ -22,7 +23,10 @@ export function Sheet({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      sfx("sheet");
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 

@@ -75,12 +75,13 @@ export function Nav() {
           {TABS.map((tab) => {
             const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
             return (
-              <li key={tab.href} className={active ? "flex-[1.7]" : "flex-1"}>
+              <li key={tab.href} className={`nav-item ${active ? "flex-[1.7]" : "flex-1"}`}>
                 <Link
                   href={tab.href}
                   aria-current={active ? "page" : undefined}
                   aria-label={active ? undefined : tab.label}
-                  className={`flex h-12 items-center justify-center gap-2 rounded-full text-sm font-bold ${
+                  data-sfx="nav"
+                  className={`nav-link flex h-12 items-center justify-center gap-2 rounded-full text-sm font-bold ${
                     active ? "bg-ink text-white" : ""
                   }`}
                 >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { PasswordForm, ProfileForm, SignIn, useProfile } from "@/components/Account";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { CornerHold } from "@/components/Hold";
@@ -9,6 +9,7 @@ import { buildDemo } from "@/lib/demo";
 import { plural, timeLabel } from "@/lib/format";
 import { useCustomColors, useData } from "@/lib/hooks";
 import { supabase, usernameOf } from "@/lib/supabase";
+import { setSoundOn, sfx, soundOn, subscribeSound } from "@/lib/sfx";
 import { syncNow, useSyncStatus } from "@/lib/sync";
 
 export default function SettingsPage() {
@@ -179,6 +180,8 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <SoundCard />
+
       <section className="card mt-3">
         <h2 className="h-card">Your colours</h2>
         {colors.length === 0 ? (
@@ -277,5 +280,41 @@ export default function SettingsPage() {
         </section>
       )}
     </main>
+  );
+}
+
+function SoundCard() {
+  const on = useSyncExternalStore(subscribeSound, soundOn, () => true);
+  return (
+    <section className="card mt-3">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="h-card" id="sound-label">
+            Sounds and buzzes
+          </h2>
+          <p className="muted mt-1 text-sm leading-relaxed">
+            Little sounds for each tap, fall and send. On iPhone the silent switch mutes them.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-labelledby="sound-label"
+          data-sfx="none"
+          onClick={() => {
+            setSoundOn(!on);
+            if (!on) sfx("save");
+          }}
+          className={`relative h-9 w-16 flex-none rounded-full transition-colors ${on ? "bg-ink" : "bg-line"}`}
+        >
+          <span
+            aria-hidden
+            className="absolute top-1 h-7 w-7 rounded-full bg-white shadow transition-[left] duration-200"
+            style={{ left: on ? "2rem" : "0.25rem" }}
+          />
+        </button>
+      </div>
+    </section>
   );
 }

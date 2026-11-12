@@ -19,6 +19,7 @@ export function Cta({
   disabled,
   plus,
   bare,
+  sfx,
   className = "",
 }: {
   children: React.ReactNode;
@@ -31,6 +32,8 @@ export function Cta({
   /** No arrow circle; label centred. */
   bare?: boolean;
   className?: string;
+  /** A special sound for this action, such as "save". */
+  sfx?: string;
 }) {
   const cls = `cta ${bare ? "cta-center" : ""} ${className}`;
   const inner = (
@@ -41,13 +44,13 @@ export function Cta({
   );
   if (href) {
     return (
-      <Link href={href} className={cls}>
+      <Link href={href} className={cls} data-sfx={sfx}>
         {inner}
       </Link>
     );
   }
   return (
-    <button type={type} className={cls} onClick={onClick} disabled={disabled}>
+    <button type={type} className={cls} onClick={onClick} disabled={disabled} data-sfx={sfx}>
       {inner}
     </button>
   );

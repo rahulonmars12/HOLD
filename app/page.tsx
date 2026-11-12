@@ -318,6 +318,7 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
           </button>
           <Cta
             bare
+            sfx="save"
             className="flex-1 !min-h-14"
             onClick={async () => {
               await endSession(session.id, note);

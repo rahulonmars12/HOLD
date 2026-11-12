@@ -11,6 +11,7 @@ import { gradeLabel } from "@/lib/constants";
 import { getMeta, setMeta } from "@/lib/db";
 import { percent, plural } from "@/lib/format";
 import { useData, type Data } from "@/lib/hooks";
+import { useCountUp } from "@/lib/useCountUp";
 import {
   MIN_SAMPLE,
   biggestGap,
@@ -192,9 +193,18 @@ function Tile({ label, value, accent }: { label: string; value: string; accent?:
   return (
     <div className={`rounded-[1.625rem] px-[1.125rem] pb-4 pt-3.5 ${accent ? "bg-sun" : "bg-white"}`}>
       <dt className={`text-sm font-semibold ${accent ? "" : "muted"}`}>{label}</dt>
-      <dd className="display mt-0.5 text-[2.125rem] leading-tight">{value}</dd>
+      <dd className="display mt-0.5 text-[2.125rem] leading-tight">
+        <CountText value={value} />
+      </dd>
     </div>
   );
+}
+
+/** Numbers like "12" or "22%" count up when shown; anything else appears as is. */
+function CountText({ value }: { value: string }) {
+  const match = /^(\d+)(%?)$/.exec(value);
+  const shown = useCountUp(match ? Number(match[1]) : 0);
+  return <>{match ? `${shown}${match[2]}` : value}</>;
 }
 
 function Pyramid({ rows }: { rows: PyramidRow[] }) {
@@ -300,7 +310,7 @@ function StrongWeak({ profiles, weakest }: { profiles: { dimension: Dimension; r
                   <td className="w-[8.5rem]">
                     <span className="flex items-center gap-3.5">
                       <span className="h-2 flex-1 rounded bg-[#DFF6EE]" role="img" aria-label={`${r.sent} of ${r.tried} sent`}>
-                        <span className="bar-cap cap-pinch block h-2 rounded bg-mint-deep" style={{ width: `${r.sendRate * 100}%` }} />
+                        <span className="bar-cap cap-pinch grow-x block h-2 rounded bg-mint-deep" style={{ width: `${r.sendRate * 100}%` }} />
                       </span>
                       <span className="w-10 text-right text-[0.8125rem] font-bold">
                         {r.sent}
@@ -365,7 +375,7 @@ function WhyYouFall({ reasons, previous }: { reasons: Reasons; previous: Reasons
                   <span className="mr-2.5 mt-1.5 block h-2.5 rounded-full bg-wall">
                     {r.count > 0 && (
                       <span
-                        className="bar-cap cap-sloper block h-2.5 rounded-full bg-ink"
+                        className="bar-cap cap-sloper grow-x block h-2.5 rounded-full bg-ink"
                         style={{ width: `${Math.max((r.share / maxShare) * 100, 3)}%` }}
                       />
                     )}

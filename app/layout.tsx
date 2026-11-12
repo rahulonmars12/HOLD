@@ -4,6 +4,7 @@ import "@fontsource-variable/dm-sans";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { SfxAgent } from "@/components/SfxAgent";
 import { SyncAgent } from "@/components/SyncAgent";
 
 export const metadata: Metadata = {
@@ -45,6 +46,7 @@ export default function RootLayout({
         <Nav />
         <ServiceWorker />
         <SyncAgent />
+        <SfxAgent />
       </body>
     </html>
   );

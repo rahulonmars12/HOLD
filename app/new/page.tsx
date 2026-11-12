@@ -335,7 +335,7 @@ export default function NewClimbPage() {
           {missing.length > 0 && (
             <p className="muted mb-2 text-center text-sm font-semibold">Still needs {missing.join(" and ")}.</p>
           )}
-          <Cta onClick={save} disabled={missing.length > 0 || saving}>
+          <Cta onClick={save} disabled={missing.length > 0 || saving} sfx="save">
             Save and start climbing
           </Cta>
         </div>

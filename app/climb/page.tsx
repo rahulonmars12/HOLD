@@ -7,6 +7,7 @@ import { describeClimb, mainHold } from "@/components/ClimbCards";
 import { CoachCard } from "@/components/Coach";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { Cta } from "@/components/Cta";
+import { HoldRain } from "@/components/HoldRain";
 import { Hold } from "@/components/Hold";
 import { Sheet } from "@/components/Sheet";
 import { FallCount, Tally } from "@/components/Tally";
@@ -89,6 +90,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
   const [whatWorked, setWhatWorked] = useState(climb.whatWorked ?? "");
   const [justLogged, setJustLogged] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [rain, setRain] = useState(0);
 
   const fresh = active ? new Set(attempts.filter((a) => a.sessionId === active.id).map((a) => a.id)) : undefined;
   const guess = GUESSES.find((g) => g.id === climb.guess);
@@ -110,7 +112,10 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
     setBusy(true);
     await logAttempt(climb.id, active.id, "send");
     setJustLogged(true);
-    setReviewing(true);
+    setRain((n) => n + 1);
+    // Let the tick draw and the holds fall before the review sheet covers them.
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => setReviewing(true), calm ? 0 : 1100);
     setBusy(false);
   };
 
@@ -333,17 +338,20 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
                 type="button"
                 onClick={fell}
                 disabled={busy}
+                data-sfx="fall"
                 className="display flex h-[5.5rem] items-center justify-center rounded-full bg-white text-2xl shadow-[inset_0_0_0_2.5px_#1E1B3A] active:scale-[0.97]"
               >
                 Fell
               </button>
-              <button type="button" onClick={sent} disabled={busy} className="cta cta-center display h-[5.5rem] text-2xl !font-black">
+              <button type="button" onClick={sent} disabled={busy} data-sfx="send" className="cta cta-center display h-[5.5rem] text-2xl !font-black">
                 Sent
               </button>
             </div>
           )}
         </div>
       </div>
+
+      {rain > 0 && <HoldRain key={rain} />}
 
       <ReasonSheet attemptId={labelling} stat={stat} onClose={() => setLabelling(null)} />
 
@@ -395,6 +403,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
         />
         <Cta
           bare
+          sfx="save"
           className="mt-4"
           onClick={async () => {
             await saveRead(climb.id, read, whatWorked);
@@ -446,6 +455,7 @@ function ReasonSheet({ attemptId, stat, onClose }: { attemptId: string | null; s
                 key={r.id}
                 type="button"
                 aria-pressed={attempt.reason === r.id}
+                data-sfx="reason"
                 onClick={async () => {
                   await setAttemptReason(attempt.id, attempt.reason === r.id ? undefined : r.id);
                   onClose();
