@@ -2,8 +2,8 @@
 
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
-import { PERSONAS, PERSONA_COLORS, personaImage, type PersonaId } from "@/lib/persona";
-import { Aurora, Burst, Halo } from "./Aurora";
+import { PERSONAS, personaImage, type PersonaId } from "@/lib/persona";
+import { Aurora, Burst, Halo, personaBg } from "./Aurora";
 import { evolveSound, sfx } from "@/lib/sfx";
 import { Hold } from "./Hold";
 
@@ -78,13 +78,14 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
       <Aurora
         colors={
           phase === "done"
-            ? PERSONA_COLORS[to]
+            ? personaBg(to).colors
             : morphing
-              ? ["#FFFFFF", "#B79BFF", "#7EB3FF", "#FF9CC2"]
+              ? ["#FFFFFF", "#A855F7", "#3B82F6", "#FF4F9A"]
               : from === "new"
-                ? ["#FFDD55", "#B79BFF", "#7EB3FF"]
-                : PERSONA_COLORS[from]
+                ? ["#7C3AED", "#3B82F6", "#DB2777"]
+                : personaBg(from).colors
         }
+        base={phase === "done" ? personaBg(to).base : "#120F2C"}
         fast={morphing}
       />
       <p className="relative min-h-14 max-w-[18rem] text-lg font-bold leading-snug">
@@ -98,7 +99,7 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
       <div className="relative mt-4 flex h-64 w-64 items-center justify-center">
         {phase === "done" ? (
           <>
-            <Halo colors={PERSONA_COLORS[to]} size={320} />
+            <Halo colors={personaBg(to).halo} size={320} />
             <Burst />
           </>
         ) : (

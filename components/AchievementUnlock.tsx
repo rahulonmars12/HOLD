@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { RARITY_LABEL, byId } from "@/lib/achievements";
 import { pieceSound, sfx } from "@/lib/sfx";
-import { Aurora, Burst, Halo, RARITY_COLORS } from "./Aurora";
+import { Aurora, Burst, Halo, RARITY_BG } from "./Aurora";
 import { Badge, assembleMs, piecesOf } from "./Badge";
 import { HoldRain } from "./HoldRain";
 
@@ -61,12 +61,14 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
       aria-label={`Achievement unlocked: ${def.name}`}
       className="fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-[#141230] px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-white"
     >
-      <Aurora colors={RARITY_COLORS[def.rarity]} />
+      <Aurora colors={RARITY_BG[def.rarity].colors} base={RARITY_BG[def.rarity].base} rainbow={def.rarity === "holo"} />
       <p className="relative flex h-9 items-center rounded-full bg-white/20 px-4 text-sm font-bold backdrop-blur">Achievement unlocked</p>
       <div className="relative mt-8">
-        <Halo colors={RARITY_COLORS[def.rarity]} size={300} className={locked ? "" : "halo-fast"} />
+        <Halo colors={RARITY_BG[def.rarity].halo} size={310} className={locked ? "" : "halo-fast"} />
         {locked && <Burst delay={0} />}
-        <Badge id={id} size={250} assemble label={def.name} className="relative" />
+        <div className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: "drop-shadow(0 22px 30px rgb(0 0 0 / 0.45))" }}>
+          <Badge id={id} size={250} assemble label={def.name} />
+        </div>
       </div>
       <div className={`relative mt-6 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`}>
         <p className="text-sm font-bold text-white/70">No. {String(def.no).padStart(2, "0")} of 27</p>

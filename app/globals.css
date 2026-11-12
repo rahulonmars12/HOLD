@@ -379,6 +379,19 @@ dialog.sheet::backdrop {
     animation: coin-shine 1.6s 1s ease-in-out infinite;
     animation-duration: 4s;
   }
+  .aurora-rainbow {
+    animation: hue 6s linear infinite;
+  }
+  .particle {
+    animation: rise-up linear infinite;
+  }
+  .twinkle {
+    animation: twinkle 1.8s ease-in-out infinite;
+  }
+  .coin-float {
+    animation: coin-float 4.5s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
   .aurora-blob {
     will-change: transform;
     transition: background 700ms ease;
@@ -406,7 +419,8 @@ dialog.sheet::backdrop {
   }
   .hold-rain,
   .evo-flash,
-  .burst {
+  .burst,
+  .particle {
     display: none;
   }
 }
@@ -510,22 +524,66 @@ dialog.sheet::backdrop {
 }
 @keyframes aurora-a {
   to {
-    transform: translate(22%, 18%) scale(1.15);
+    transform: translate(38%, 30%) scale(1.25);
   }
 }
 @keyframes aurora-b {
   to {
-    transform: translate(-25%, 20%) scale(0.9);
+    transform: translate(-40%, 34%) scale(0.85);
   }
 }
 @keyframes aurora-c {
   to {
-    transform: translate(20%, -22%) scale(1.2);
+    transform: translate(36%, -38%) scale(1.3);
   }
 }
 @keyframes aurora-d {
   to {
-    transform: translate(-18%, -15%) scale(1.05);
+    transform: translate(-34%, -30%) scale(1.1);
+  }
+}
+@keyframes hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+@keyframes rise-up {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(var(--sway, 20px), -55vh);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, -110vh);
+    opacity: 0;
+  }
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.5) rotate(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.1) rotate(45deg);
+    opacity: 1;
+  }
+}
+@keyframes coin-float {
+  0%,
+  100% {
+    transform: perspective(700px) translateY(0) rotateY(-16deg) rotateX(4deg);
+  }
+  50% {
+    transform: perspective(700px) translateY(-10px) rotateY(16deg) rotateX(-4deg);
   }
 }
 @keyframes burst {
