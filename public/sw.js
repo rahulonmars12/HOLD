@@ -8,9 +8,9 @@
  * so screens that have never been opened still work offline.
  */
 
-const PAGES = "tickmark-pages-v2";
+const PAGES = "tickmark-pages-v3";
 const ASSETS = "tickmark-assets-v2";
-const ROUTES = ["/", "/new", "/climb", "/log", "/buddies", "/insights", "/settings"];
+const ROUTES = ["/", "/new", "/climb", "/log", "/buddies", "/insights", "/settings", "/welcome"];
 const ASSET_PATTERN = /\/_next\/static\/[A-Za-z0-9_\-./%~@[\]()]+/g;
 
 async function warm() {

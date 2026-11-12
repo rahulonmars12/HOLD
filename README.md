@@ -34,10 +34,14 @@ next, and you can ask it a question. On Insights: what to practise based on
 the last 90 days. When adding a climb: take a photo and HOLD! fills in the
 colour, angle, holds and style (and the grade if a tag is readable).
 
-**Buddies.** Pick a username, add buddies by theirs. See who is climbing
-right now, their recent sends with beta, and when you add a climb, pick one
-a buddy already logged at that gym to see how everyone got on with it.
-Only accepted buddies can see your log.
+**Buddies.** Everyone who joins HOLD! is automatically buddies with
+everyone else. See who is climbing right now, their recent sends with beta,
+and when you add a climb, pick one a buddy already logged at that gym to see
+how everyone got on with it. Share the link from the Buddies tab to invite
+people. Only buddies can see your log; remove someone to hide it from them.
+
+**First run.** A short onboarding: what HOLD! does, making an account (or
+skipping to keep the log on the phone), and the first session.
 
 ## Run it
 
@@ -53,7 +57,8 @@ The service worker (offline support) only registers in production builds.
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor**, paste `supabase/migrations/0001_tickmark.sql`, and
-   run it. Then do the same with `supabase/migrations/0002_username_accounts.sql`.
+   run it. Then do the same with `supabase/migrations/0002_username_accounts.sql`
+   and `supabase/migrations/0003_everyone_is_buddies.sql`.
    These create the tables, the access rules (you and your accepted buddies
    only) and the `photos` storage bucket.
 3. Open **Authentication → Sign In / Providers → Email**. Keep the Email

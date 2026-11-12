@@ -28,7 +28,7 @@ export default function BuddiesPage() {
       <CornerHold kind="pocket" fill="#B79BFF" shade="#A080F5" rotate={-16} size={220} right={-70} top={-74} />
       <h1 className="h-page relative">Buddies</h1>
       <p className="muted relative mt-2 max-w-[16rem] text-[0.9375rem]">
-        See who&apos;s climbing, what they sent, and their beta on climbs you share.
+        Everyone on HOLD! is your buddy. See who&apos;s climbing, what they sent, and their beta on climbs you share.
       </p>
 
       {auth === undefined || (auth && profile === undefined) ? null : !auth ? (
@@ -164,7 +164,7 @@ function Feed({ username }: { username: string }) {
         {sends.length === 0 ? (
           <p className="muted mt-2 text-[0.9375rem]">
             {accepted.length === 0
-              ? "Add a buddy to see their sends here."
+              ? "Nobody else has joined yet. Invite your crew below."
               : loaded
                 ? "No sends from your buddies in the last three weeks."
                 : "Checking…"}
@@ -194,12 +194,14 @@ function Feed({ username }: { username: string }) {
       </section>
 
       <section className="card mt-7">
-        <h2 className="h-card">Add a buddy</h2>
+        <h2 className="h-card">Invite your crew</h2>
         <p className="muted mt-1 text-sm">
-          Ask for their username. Yours is <strong className="text-ink">@{username}</strong>.
+          Anyone who joins becomes everyone&apos;s buddy. You&apos;re <strong className="text-ink">@{username}</strong>.
         </p>
+        <InviteButton />
+        <p className="muted mt-5 text-sm">Removed someone by mistake? Add them back by username.</p>
         <form
-          className="mt-3 flex gap-2"
+          className="mt-2 flex gap-2"
           onSubmit={async (e) => {
             e.preventDefault();
             setAddMsg(null);
@@ -238,7 +240,7 @@ function Feed({ username }: { username: string }) {
 
       {(accepted.length > 0 || outgoing.length > 0) && (
         <section className="mt-7">
-          <h2 className="h-card">Your buddies</h2>
+          <h2 className="h-card">Your buddies ({accepted.length})</h2>
           <ul className="mt-3 flex flex-col gap-2">
             {[...accepted, ...outgoing].map((l) => (
               <li key={l.other.id} className="flex items-center gap-3 rounded-[1.5rem] bg-white py-3 pl-5 pr-3">
@@ -263,5 +265,36 @@ function Feed({ username }: { username: string }) {
         </section>
       )}
     </>
+  );
+}
+
+function InviteButton() {
+  const [copied, setCopied] = useState(false);
+  const link = typeof window === "undefined" ? "" : window.location.origin;
+  return (
+    <button
+      type="button"
+      className="btn btn-ink mt-3 w-full"
+      onClick={async () => {
+        const text = "Climb with me on HOLD!, the log that counts every fall.";
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: "HOLD!", text, url: link });
+            return;
+          } catch {
+            // Closed the share sheet, or sharing isn't allowed: fall back to copying.
+          }
+        }
+        try {
+          await navigator.clipboard.writeText(link);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        } catch {
+          window.prompt("Copy this link", link);
+        }
+      }}
+    >
+      {copied ? "Link copied" : "Share the HOLD! link"}
+    </button>
   );
 }

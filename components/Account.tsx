@@ -15,8 +15,14 @@ import {
 } from "@/lib/supabase";
 
 /** Sign in or create an account with a username and password. No email needed. */
-export function SignIn({ intro }: { intro?: string }) {
-  const [mode, setMode] = useState<"signin" | "create">("signin");
+export function SignIn({
+  intro,
+  initialMode = "signin",
+}: {
+  intro?: string;
+  initialMode?: "signin" | "create";
+}) {
+  const [mode, setMode] = useState<"signin" | "create">(initialMode);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");

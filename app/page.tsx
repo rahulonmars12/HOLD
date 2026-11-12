@@ -1,13 +1,15 @@
 "use client";
 
+import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ClimbRow, ClimbTile } from "@/components/ClimbCards";
 import { Cta } from "@/components/Cta";
-import { CornerHold, Hold } from "@/components/Hold";
+import { CornerHold } from "@/components/Hold";
 import { Sheet } from "@/components/Sheet";
 import { gradeLabel, gymKey } from "@/lib/constants";
-import { endSession, startSession } from "@/lib/db";
+import { db, endSession, getMeta, startSession } from "@/lib/db";
 import { dayLabel, duration, plural } from "@/lib/format";
 import { useData, useNow, type Data } from "@/lib/hooks";
 import { climbingNow, nameOf, type LiveSession } from "@/lib/social";
@@ -17,9 +19,31 @@ import type { Session } from "@/lib/types";
 
 export default function SessionPage() {
   const data = useData();
-  if (!data) return null;
+  const onboarded = useLiveQuery(async () => (await getMeta<boolean>("onboarded")) ?? false, []);
+  const router = useRouter();
+  const fresh = data !== undefined && data.sessions.length === 0 && data.climbs.length === 0;
+  const needsWelcome = fresh && onboarded === false;
+
+  useEffect(() => {
+    if (!needsWelcome) return;
+    // Next keeps visited pages alive in the background, so this can run with
+    // stale data; check the database again before redirecting.
+    let alive = true;
+    (async () => {
+      const [sessions, climbs, done] = await Promise.all([
+        db.sessions.count(),
+        db.climbs.count(),
+        getMeta<boolean>("onboarded"),
+      ]);
+      if (alive && sessions === 0 && climbs === 0 && !done) router.replace("/welcome");
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [needsWelcome, router]);
+
+  if (!data || onboarded === undefined || needsWelcome) return null;
   if (data.active) return <ActiveSession data={data} session={data.active} />;
-  if (data.sessions.length === 0 && data.climbs.length === 0) return <Welcome />;
   return <StartSession data={data} />;
 }
 
@@ -55,34 +79,6 @@ function GymForm({ gyms, label, cta }: { gyms: string[]; label: string; cta: str
         {cta}
       </Cta>
     </form>
-  );
-}
-
-function Welcome() {
-  return (
-    <main className="-mx-5 -mt-6">
-      <div aria-hidden className="relative h-[19rem] overflow-hidden">
-        <Hold kind="jug" fill="#FFDD55" shade="#E8BE2A" size={150} rotate={-14} style={{ position: "absolute", left: -20, top: 10 }} />
-        <Hold kind="crimp" fill="#7EB3FF" shade="#5E9EF5" size={190} rotate={8} viewBox="0 11 40 17" style={{ position: "absolute", left: 150, top: 30, height: 81 }} />
-        <Hold kind="pinch" fill="#5FDDB0" shade="#3FC998" size={100} rotate={24} style={{ position: "absolute", right: -10, top: 96 }} />
-        <Hold kind="sloper" fill="#FFA45C" shade="#F58F40" size={140} rotate={-6} style={{ position: "absolute", left: 120, top: 130 }} />
-        <Hold kind="pocket" fill="#B79BFF" shade="#A080F5" size={90} rotate={12} style={{ position: "absolute", left: 20, top: 180 }} />
-        <Hold kind="volume" fill="#FF9CC2" shade="#F582AD" size={110} rotate={-10} style={{ position: "absolute", right: 0, top: 210 }} />
-      </div>
-      <div className="px-5">
-        <p className="display text-[0.9375rem]">HOLD!</p>
-        <h1 className="display mt-2 text-[1.75rem] leading-[1.12]">Log every attempt, not just the sends.</h1>
-        <p className="muted mt-2.5 text-[0.9375rem] leading-relaxed">
-          One tap for each fall, one more for why. After a few sessions you&apos;ll see what holds you back.
-        </p>
-        <div className="mt-5">
-          <GymForm gyms={[]} label="Where do you climb?" cta="Start first session" />
-        </div>
-        <Link href="/settings#demo" className="mt-2 flex min-h-12 items-center justify-center text-[0.9375rem] font-bold underline underline-offset-4">
-          Preview with demo data
-        </Link>
-      </div>
-    </main>
   );
 }
 

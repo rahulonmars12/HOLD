@@ -58,7 +58,7 @@ const TABS = [
 ];
 
 /** Screens used mid-attempt hide the tabs so nothing competes with logging. */
-const FOCUS_ROUTES = ["/climb", "/new"];
+const FOCUS_ROUTES = ["/climb", "/new", "/welcome"];
 
 export function Nav() {
   const pathname = usePathname();
