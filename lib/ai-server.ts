@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
+import { cloud } from "./cloud-config";
 
 /** Requests per climber per rolling 24 hours, to keep the API bill predictable. */
 export const DAILY_LIMIT = 40;
@@ -24,8 +25,7 @@ const fail = (status: number, error: string) => ({
  * call. Uses the caller's own token, so row-level security applies.
  */
 export async function authorize(req: Request, kind: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const { url, key } = cloud;
   if (!process.env.ANTHROPIC_API_KEY) return fail(503, "AI isn't set up yet. Add ANTHROPIC_API_KEY in Vercel.");
   if (!url || !key) return fail(503, "Accounts aren't set up yet, and AI needs you signed in.");
 

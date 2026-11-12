@@ -8,6 +8,7 @@ import {
   changePassword,
   cleanUsername,
   cloudEnabled,
+  cloudProblem,
   createAccount,
   signIn,
   useAuth,
@@ -22,6 +23,13 @@ export function SignIn({ intro }: { intro?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  if (!cloudEnabled && cloudProblem) {
+    return (
+      <p role="alert" className="text-sm font-semibold leading-relaxed text-danger">
+        {cloudProblem} Then redeploy.
+      </p>
+    );
+  }
   if (!cloudEnabled) {
     return (
       <p className="muted text-sm leading-relaxed">

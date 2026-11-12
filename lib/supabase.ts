@@ -2,12 +2,15 @@
 
 import { createClient, type Session as AuthSession, type SupabaseClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { cloud } from "./cloud-config";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const { url, key, problem } = cloud;
 
 /** False until the Supabase settings are added in Vercel; the app then runs on-device only. */
 export const cloudEnabled = Boolean(url && key);
+
+/** Why the Supabase settings in Vercel can't be used, if they're set but wrong. */
+export const cloudProblem = problem;
 
 let client: SupabaseClient | null = null;
 
