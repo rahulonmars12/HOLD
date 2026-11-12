@@ -1,8 +1,10 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { RARITY_LABEL, byId } from "@/lib/achievements";
 import { pieceSound, sfx } from "@/lib/sfx";
+import { Aurora, Burst, Halo, RARITY_COLORS } from "./Aurora";
 import { Badge, assembleMs, piecesOf } from "./Badge";
 import { HoldRain } from "./HoldRain";
 
@@ -20,6 +22,7 @@ const RARITY_PILL: Record<string, string> = {
 export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?: number; onDone: () => void }) {
   const def = byId(id);
   const [shown, setShown] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     if (!def) return;
@@ -29,13 +32,17 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
     if (calm) {
       at(0, () => {
         setShown(true);
+        setLocked(true);
         sfx("achievement");
       });
     } else {
       const n = piecesOf(id);
       for (let i = 0; i < n; i++) at(120 + i * 90 + 450, () => pieceSound(i));
       const { lock, piecesDone } = assembleMs(id);
-      at(lock + 200, () => sfx("clink"));
+      at(lock + 200, () => {
+        sfx("clink");
+        setLocked(true);
+      });
       at(piecesDone + 150, () => {
         setShown(true);
         sfx("achievement");
@@ -45,21 +52,21 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
   }, [def, id]);
 
   if (!def) return null;
-  return (
+  if (typeof document === "undefined") return null;
+  // Rendered at the top of the page so nothing, like the tab bar, can sit above it.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Achievement unlocked: ${def.name}`}
-      className="fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-ink px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-white"
+      className="fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-[#141230] px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-white"
     >
-      <div
-        aria-hidden
-        className="rays pointer-events-none absolute left-1/2 top-[-10rem] h-[56rem] w-[56rem] -translate-x-1/2 rounded-full"
-        style={{ background: "repeating-conic-gradient(rgb(255 255 255 / 0.07) 0deg 9deg, transparent 9deg 20deg)" }}
-      />
-      <p className="relative flex h-9 items-center rounded-full bg-white/15 px-4 text-sm font-bold">Achievement unlocked</p>
+      <Aurora colors={RARITY_COLORS[def.rarity]} />
+      <p className="relative flex h-9 items-center rounded-full bg-white/20 px-4 text-sm font-bold backdrop-blur">Achievement unlocked</p>
       <div className="relative mt-8">
-        <Badge id={id} size={250} assemble label={def.name} />
+        <Halo colors={RARITY_COLORS[def.rarity]} size={300} className={locked ? "" : "halo-fast"} />
+        {locked && <Burst delay={0} />}
+        <Badge id={id} size={250} assemble label={def.name} className="relative" />
       </div>
       <div className={`relative mt-6 transition-opacity duration-300 ${shown ? "opacity-100" : "opacity-0"}`}>
         <p className="text-sm font-bold text-white/70">No. {String(def.no).padStart(2, "0")} of 27</p>
@@ -85,6 +92,7 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

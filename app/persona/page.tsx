@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
+import { Aurora, Halo } from "@/components/Aurora";
 import { Evolution } from "@/components/Evolution";
 import { useData } from "@/lib/hooks";
-import { MIN_SESSIONS, PERSONAS, PERSONA_ORDER, personaImage, type Persona, type PersonaId } from "@/lib/persona";
+import { MIN_SESSIONS, PERSONAS, PERSONA_COLORS, PERSONA_ORDER, personaImage, type Persona, type PersonaId } from "@/lib/persona";
 import { usePersona } from "@/lib/usePersona";
 
 const noop = () => () => {};
@@ -88,16 +89,13 @@ function Reveal({ persona }: { persona: Persona }) {
 
   return (
     <section className="relative overflow-hidden pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]" style={{ background: info.tint }}>
-      <div
-        aria-hidden
-        className="rays pointer-events-none absolute left-1/2 top-[-12rem] h-[48rem] w-[48rem] -translate-x-1/2 rounded-full"
-        style={{ background: "repeating-conic-gradient(rgb(255 255 255 / 0.55) 0deg 9deg, transparent 9deg 20deg)" }}
-      />
+      <Aurora colors={PERSONA_COLORS[persona.id]} tone="light" />
       <Close />
       <div className="relative flex flex-col items-center px-5 text-center">
         <p className="rise-1 flex h-9 items-center rounded-full bg-white/80 px-4 text-sm font-bold">Your climbing persona</p>
-        <div className="persona-pop mt-2">
-          <div className="bob">
+        <div className="persona-pop relative mt-2">
+          <Halo colors={PERSONA_COLORS[persona.id]} size={250} className="opacity-60" />
+          <div className="bob relative">
             <PersonaImg id={persona.id} size={230} />
           </div>
         </div>

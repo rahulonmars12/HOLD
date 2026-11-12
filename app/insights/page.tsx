@@ -14,7 +14,8 @@ import { useData, type Data } from "@/lib/hooks";
 import { useCountUp } from "@/lib/useCountUp";
 import { Badge } from "@/components/Badge";
 import { ACHIEVEMENTS, progressAll } from "@/lib/achievements";
-import { PERSONAS, personaImage } from "@/lib/persona";
+import { PERSONAS, PERSONA_COLORS, personaImage } from "@/lib/persona";
+import { Aurora } from "@/components/Aurora";
 import { usePersona, usePersonaReveal } from "@/lib/usePersona";
 import {
   MIN_SAMPLE,
@@ -524,11 +525,7 @@ function PersonaCard({ data }: { data: Data }) {
   const dash = PERSONAS[result.persona.dash];
   return (
     <Link href="/persona" className="relative mt-4 block overflow-hidden rounded-[1.875rem] px-4 pb-4 pt-3" style={{ background: info.tint }}>
-      <span
-        aria-hidden
-        className="rays pointer-events-none absolute -left-24 -top-28 h-80 w-80 rounded-full"
-        style={{ background: "repeating-conic-gradient(rgb(255 255 255 / 0.5) 0deg 9deg, transparent 9deg 20deg)" }}
-      />
+      <Aurora colors={PERSONA_COLORS[info.id]} tone="light" />
       <span className="relative flex items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={personaImage(info.id)} alt="" width={104} height={104} className="bob -ml-1 flex-none" />

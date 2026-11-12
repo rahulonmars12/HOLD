@@ -1,7 +1,9 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
-import { PERSONAS, personaImage, type PersonaId } from "@/lib/persona";
+import { PERSONAS, PERSONA_COLORS, personaImage, type PersonaId } from "@/lib/persona";
+import { Aurora, Burst, Halo } from "./Aurora";
 import { evolveSound, sfx } from "@/lib/sfx";
 import { Hold } from "./Hold";
 
@@ -64,24 +66,27 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
   const toInfo = PERSONAS[to];
   const morphing = phase === "morph" || phase === "flash";
 
-  return (
+  if (typeof document === "undefined") return null;
+  // Rendered at the top of the page so nothing, like the tab bar, can sit above it.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`You now climb like ${toInfo.article} ${toInfo.name}`}
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-ink px-6 text-center text-white"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-[#141230] px-6 text-center text-white"
     >
-      <div
-        aria-hidden
-        className={`evo-rays pointer-events-none absolute left-1/2 top-1/2 h-[60rem] w-[60rem] -translate-x-1/2 -translate-y-1/2 rounded-full ${morphing ? "evo-rays-fast" : ""}`}
-        style={{
-          background:
-            phase === "done"
-              ? `repeating-conic-gradient(${toInfo.tint}66 0deg 9deg, transparent 9deg 20deg)`
-              : "repeating-conic-gradient(rgb(255 255 255 / 0.08) 0deg 9deg, transparent 9deg 20deg)",
-        }}
+      <Aurora
+        colors={
+          phase === "done"
+            ? PERSONA_COLORS[to]
+            : morphing
+              ? ["#FFFFFF", "#B79BFF", "#7EB3FF", "#FF9CC2"]
+              : from === "new"
+                ? ["#FFDD55", "#B79BFF", "#7EB3FF"]
+                : PERSONA_COLORS[from]
+        }
+        fast={morphing}
       />
-
       <p className="relative min-h-14 max-w-[18rem] text-lg font-bold leading-snug">
         {phase === "done"
           ? "Your climbing changed shape!"
@@ -91,6 +96,14 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
       </p>
 
       <div className="relative mt-4 flex h-64 w-64 items-center justify-center">
+        {phase === "done" ? (
+          <>
+            <Halo colors={PERSONA_COLORS[to]} size={320} />
+            <Burst />
+          </>
+        ) : (
+          morphing && <Halo colors={["#FFFFFF", "#B79BFF", "#7EB3FF", "#FF9CC2"]} size={300} className="halo-fast" />
+        )}
         {phase === "done" ? (
           <>
             <Sparkles />
@@ -152,7 +165,8 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
       </div>
 
       {phase === "flash" && <div aria-hidden className="evo-flash pointer-events-none absolute inset-0 bg-white" />}
-    </div>
+    </div>,
+    document.body,
   );
 }
 

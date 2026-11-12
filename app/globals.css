@@ -379,6 +379,19 @@ dialog.sheet::backdrop {
     animation: coin-shine 1.6s 1s ease-in-out infinite;
     animation-duration: 4s;
   }
+  .aurora-blob {
+    will-change: transform;
+    transition: background 700ms ease;
+  }
+  .halo {
+    animation: spin 9s linear infinite;
+  }
+  .halo-fast {
+    animation-duration: 1.4s;
+  }
+  .burst {
+    animation: burst 900ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
   .hold-rain-piece {
     position: absolute;
     top: -48px;
@@ -392,7 +405,8 @@ dialog.sheet::backdrop {
     animation: none;
   }
   .hold-rain,
-  .evo-flash {
+  .evo-flash,
+  .burst {
     display: none;
   }
 }
@@ -492,6 +506,36 @@ dialog.sheet::backdrop {
   }
   100% {
     transform: translateX(300px) rotate(20deg);
+  }
+}
+@keyframes aurora-a {
+  to {
+    transform: translate(22%, 18%) scale(1.15);
+  }
+}
+@keyframes aurora-b {
+  to {
+    transform: translate(-25%, 20%) scale(0.9);
+  }
+}
+@keyframes aurora-c {
+  to {
+    transform: translate(20%, -22%) scale(1.2);
+  }
+}
+@keyframes aurora-d {
+  to {
+    transform: translate(-18%, -15%) scale(1.05);
+  }
+}
+@keyframes burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
   }
 }
 @keyframes fade-in {

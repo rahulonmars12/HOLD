@@ -306,3 +306,19 @@ export function computePersona(sessions: Session[], climbs: Climb[], attempts: A
     persona: { id: ranked[0], dash: ranked[1], facts: factsFor(ranked[0], f), sessions: f.sessions },
   };
 }
+
+/** Gradient colours for each persona's celebrations: its own colour first. */
+export const PERSONA_COLORS: Record<PersonaId, string[]> = {
+  gecko: ["#5FDDB0", "#7EB3FF", "#FFDD55", "#3FC998"],
+  monkey: ["#FFA45C", "#FFDD55", "#FF8A7A", "#FFC9A3"],
+  gorilla: ["#8C8AA6", "#B79BFF", "#7EB3FF", "#D9D7E8"],
+  spider: ["#B79BFF", "#7EB3FF", "#FF9CC2", "#A080F5"],
+  octopus: ["#FF9CC2", "#B79BFF", "#FFA45C", "#F582AD"],
+  goat: ["#D6E6FF", "#FF9CC2", "#E8D9B5", "#B79BFF"],
+  cat: ["#FFDD55", "#FF9CC2", "#FFA45C", "#FFF3BF"],
+  tortoise: ["#5FDDB0", "#FFDD55", "#7EB3FF", "#3FC998"],
+  badger: ["#B79BFF", "#7EB3FF", "#FF9CC2", "#5E9EF5"],
+  squirrel: ["#FF8A7A", "#FFA45C", "#FFDD55", "#F06C5B"],
+  owl: ["#7EB3FF", "#B79BFF", "#FFA45C", "#5E9EF5"],
+  koala: ["#C9D1E8", "#FFA45C", "#B79BFF", "#7EB3FF"],
+};
