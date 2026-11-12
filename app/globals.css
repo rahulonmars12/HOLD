@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/*
+ * Tickmark's palette comes from the bouldering gym: a dark navy mat, chalk,
+ * the yellow tape of a start tag, and the colours of the holds themselves.
+ */
+@theme {
+  --color-mat: #1a2230;
+  --color-mat-2: #222c3c;
+  --color-mat-3: #2e3a4e;
+  --color-mat-4: #46546b;
+  --color-chalk: #f3efe4;
+  --color-dust: #a7b0bd;
+  --color-tape: #f2c230;
+  --color-tape-ink: #1c1604;
+  --color-danger: #f0767c;
+
+  /* Chart fills, checked for colour-blind separation on the mat-2 surface. */
+  --color-viz-amber: #b88820;
+  --color-viz-blue: #4f8fe0;
+  --color-viz-blue-light: #6fa8ee;
+  --color-viz-blue-deep: #3f78c8;
+  --color-viz-orange: #cf7026;
+  --color-viz-neutral: #5c6b84;
+
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Big Shoulders Variable", "Arial Narrow", ui-sans-serif,
+    sans-serif;
+}
+
+html {
+  color-scheme: dark;
+  background: var(--color-mat);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-mat);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-tape);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .h-page {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.25rem;
+    line-height: 1.05;
+    letter-spacing: 0.005em;
+  }
+
+  .h-section {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: 1.375rem;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+  }
+
+  .grade {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.01em;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 1.125rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    background: var(--color-mat-3);
+    color: var(--color-chalk);
+    transition: transform 80ms ease-out, background-color 120ms;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+  }
+  .btn-tape {
+    background: var(--color-tape);
+    color: var(--color-tape-ink);
+  }
+  .btn-quiet {
+    background: transparent;
+    color: var(--color-dust);
+    font-weight: 500;
+  }
+  .btn-danger {
+    background: transparent;
+    color: var(--color-danger);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-danger) 55%, transparent);
+  }
+  .btn-xl {
+    min-height: 5.5rem;
+    border-radius: 1.125rem;
+    font-family: var(--font-display);
+    font-weight: 750;
+    font-size: 2rem;
+    letter-spacing: 0.01em;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0 0.95rem;
+    border-radius: 999px;
+    background: var(--color-mat-2);
+    box-shadow: inset 0 0 0 1.5px var(--color-mat-3);
+    color: var(--color-chalk);
+    font-size: 0.95rem;
+    font-weight: 500;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--color-chalk);
+    box-shadow: none;
+    color: var(--color-mat);
+    font-weight: 600;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 0.75rem;
+    background: var(--color-mat-2);
+    box-shadow: inset 0 0 0 1.5px var(--color-mat-3);
+    color: var(--color-chalk);
+    font-size: 1rem;
+  }
+  .field::placeholder {
+    color: color-mix(in srgb, var(--color-dust) 70%, transparent);
+  }
+
+  .panel {
+    background: var(--color-mat-2);
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  .muted {
+    color: var(--color-dust);
+  }
+}
+
+dialog.sheet {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 28rem;
+  max-height: 90dvh;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 1.25rem 1.25rem 0 0;
+  padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  background: var(--color-mat-2);
+  color: var(--color-chalk);
+}
+dialog.sheet::backdrop {
+  background: rgb(8 12 18 / 0.7);
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog.sheet[open] {
+    animation: sheet-up 180ms ease-out;
+  }
+  .tick-new {
+    animation: tick-in 220ms ease-out;
+    transform-origin: center bottom;
+    transform-box: fill-box;
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+@keyframes tick-in {
+  from {
+    transform: scaleY(0.2);
+    opacity: 0;
+  }
+}
