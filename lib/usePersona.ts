@@ -33,7 +33,8 @@ export function usePersonaReveal(result: PersonaResult | undefined) {
       const seen = await getMeta<string>("personaSeen");
       if (!alive || seen === id) return;
       await setMeta("personaSeen", id);
-      router.push("/persona?new=1");
+      // The old persona, if any, evolves into the new one on the next screen.
+      router.push(`/persona?from=${seen ?? "new"}`);
     })();
     return () => {
       alive = false;

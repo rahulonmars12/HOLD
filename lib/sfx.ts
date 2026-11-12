@@ -128,6 +128,23 @@ export function sfx(name: Sound) {
   }
 }
 
+/** The evolution screen: a blip that climbs in pitch with each swap, then a hum to start. */
+export function evolveSound(step: number | "start") {
+  if (!soundOn()) return;
+  try {
+    const c = audio();
+    if (!c) return;
+    if (step === "start") {
+      tone(c, 220, 0, 1.2, "triangle", 0.08, 330);
+      tone(c, 330, 0.1, 1.1, "sine", 0.04, 440);
+      return;
+    }
+    tone(c, 300 * Math.pow(1.06, step), 0, 0.09, "square", 0.025);
+  } catch {
+    // Decoration only.
+  }
+}
+
 /** Plays the sound named by a tapped element's data-sfx, or a tap by default. */
 export function soundForClick(target: EventTarget | null) {
   if (!(target instanceof Element)) return;

@@ -12,7 +12,7 @@ import { getMeta, setMeta } from "@/lib/db";
 import { percent, plural } from "@/lib/format";
 import { useData, type Data } from "@/lib/hooks";
 import { useCountUp } from "@/lib/useCountUp";
-import { MIN_SESSIONS, PERSONAS, personaImage } from "@/lib/persona";
+import { PERSONAS, personaImage } from "@/lib/persona";
 import { usePersona, usePersonaReveal } from "@/lib/usePersona";
 import {
   MIN_SAMPLE,
@@ -511,7 +511,7 @@ function PersonaCard({ data }: { data: Data }) {
         <span className="min-w-0 flex-1">
           <span className="block text-[0.9375rem] font-bold">Your climbing persona</span>
           <span className="muted block text-sm">
-            Unlocks after {MIN_SESSIONS} sessions: {Math.min(result.sessions, MIN_SESSIONS)} of {MIN_SESSIONS} so far
+            Unlocks after your first session
           </span>
         </span>
       </Link>

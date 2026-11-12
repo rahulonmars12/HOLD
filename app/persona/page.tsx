@@ -1,25 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useSyncExternalStore } from "react";
+import { Evolution } from "@/components/Evolution";
 import { useData } from "@/lib/hooks";
 import { MIN_SESSIONS, PERSONAS, PERSONA_ORDER, personaImage, type Persona, type PersonaId } from "@/lib/persona";
-import { sfx } from "@/lib/sfx";
 import { usePersona } from "@/lib/usePersona";
+
+const noop = () => () => {};
 
 /** Your climbing persona, full screen, with every persona below it. */
 export default function PersonaPage() {
   const data = useData();
   const result = usePersona(data);
-
-  useEffect(() => {
-    // Arriving from the reveal: celebrate.
-    if (new URLSearchParams(window.location.search).get("new")) sfx("persona");
-  }, []);
+  const router = useRouter();
+  const search = useSyncExternalStore(noop, () => window.location.search, () => "");
+  const [watched, setWatched] = useState(false);
+  const fromParam = new URLSearchParams(search).get("from");
+  const from = fromParam === "new" ? "new" : fromParam && fromParam in PERSONAS ? (fromParam as PersonaId) : null;
 
   if (!result) return null;
+  const evolving = result.ready && from !== null && !watched && from !== result.persona.id;
   return (
     <main className="-mx-5 -mt-6 pb-10">
+      {evolving && (
+        <Evolution
+          from={from}
+          to={result.persona.id}
+          onDone={() => {
+            setWatched(true);
+            router.replace("/persona");
+          }}
+        />
+      )}
       {result.ready ? <Reveal persona={result.persona} /> : <NotYet sessions={result.sessions} />}
       <Catalog current={result.ready ? result.persona.id : undefined} />
     </main>
@@ -120,7 +134,8 @@ function Reveal({ persona }: { persona: Persona }) {
         </Link>
       </div>
       <p className="muted relative mt-3 px-5 text-center text-xs">
-        From your last 90 days ({persona.sessions} sessions). It updates as you climb.
+        From your last 90 days ({persona.sessions} {persona.sessions === 1 ? "session" : "sessions"}). It can change
+        after every session.
       </p>
     </section>
   );
@@ -137,8 +152,8 @@ function NotYet({ sessions }: { sessions: number }) {
       </div>
       <h1 className="display mt-3 text-[1.75rem] leading-tight">Your persona is on its way</h1>
       <p className="muted mt-2 text-[0.9375rem] leading-relaxed">
-        After {MIN_SESSIONS} sessions, HOLD! works out which climber you are from your angles, holds, styles, falls
-        and reads.
+        After your first session, HOLD! works out which climber you are from your angles, holds, styles, falls and
+        reads. It can change after every session.
       </p>
       <div className="mt-4 flex items-center gap-3">
         <div className="h-3 flex-1 overflow-hidden rounded-full bg-wall">

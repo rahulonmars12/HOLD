@@ -342,6 +342,21 @@ dialog.sheet::backdrop {
   .rise-3 {
     animation-delay: 600ms;
   }
+  .evo-rays {
+    animation: spin 60s linear infinite;
+  }
+  .evo-rays-fast {
+    animation-duration: 3s;
+  }
+  .evo-glow {
+    animation: evo-glow 1.4s ease-in-out infinite;
+  }
+  .evo-flash {
+    animation: evo-flash 450ms ease-out both;
+  }
+  .sparkle {
+    animation: sparkle 1.6s ease-in-out infinite;
+  }
   .hold-rain-piece {
     position: absolute;
     top: -48px;
@@ -354,7 +369,8 @@ dialog.sheet::backdrop {
   .cta {
     animation: none;
   }
-  .hold-rain {
+  .hold-rain,
+  .evo-flash {
     display: none;
   }
 }
@@ -387,6 +403,37 @@ dialog.sheet::backdrop {
   from {
     opacity: 0;
     transform: translateY(16px);
+  }
+}
+@keyframes evo-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgb(255 255 255 / 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 26px rgb(255 255 255 / 0.9));
+  }
+}
+@keyframes evo-flash {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes sparkle {
+  0%,
+  100% {
+    transform: scale(0.2) rotate(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1) rotate(45deg);
+    opacity: 1;
   }
 }
 @keyframes fade-in {

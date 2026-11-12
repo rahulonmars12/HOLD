@@ -116,7 +116,7 @@ export const PERSONA_ORDER = Object.keys(PERSONAS) as PersonaId[];
 
 export const personaImage = (id: PersonaId) => `/personas/${id}.webp`;
 
-export const MIN_SESSIONS = 5;
+export const MIN_SESSIONS = 1;
 const WINDOW_DAYS = 90;
 
 export interface Persona {
@@ -298,7 +298,7 @@ function factsFor(id: PersonaId, f: Features) {
 
 export function computePersona(sessions: Session[], climbs: Climb[], attempts: Attempt[], now = Date.now()): PersonaResult {
   const f = features(sessions, climbs, attempts, now);
-  if (f.sessions < MIN_SESSIONS || f.tried.length < 4) return { ready: false, sessions: f.sessions };
+  if (f.sessions < MIN_SESSIONS || f.tried.length < 1) return { ready: false, sessions: f.sessions };
   const s = scores(f);
   const ranked = PERSONA_ORDER.slice().sort((a, b) => s[b] - s[a]);
   return {
