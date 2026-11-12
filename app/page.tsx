@@ -14,6 +14,7 @@ import { dayLabel, duration, plural } from "@/lib/format";
 import { useData, useNow, type Data } from "@/lib/hooks";
 import { climbingNow, nameOf, type LiveSession } from "@/lib/social";
 import { climbStats, sessionStats } from "@/lib/stats";
+import { usePersona, usePersonaReveal } from "@/lib/usePersona";
 import { useAuth } from "@/lib/supabase";
 import type { Session } from "@/lib/types";
 
@@ -136,6 +137,7 @@ function StartSession({ data }: { data: Data }) {
       <div className="card relative mt-5">
         <GymForm gyms={gyms} label="Where are you climbing?" cta="Start session" />
       </div>
+      <PersonaWatch data={data} />
       <BuddiesNow />
 
       {last && (
@@ -332,4 +334,10 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
       </Sheet>
     </main>
   );
+}
+
+/** Shows the persona reveal after a session if it is new or has changed. */
+function PersonaWatch({ data }: { data: Data }) {
+  usePersonaReveal(usePersona(data));
+  return null;
 }

@@ -5,7 +5,7 @@
  * to download and they work offline. One switch in Settings turns both off.
  */
 
-export type Sound = "tap" | "fall" | "send" | "reason" | "sheet" | "save" | "nav";
+export type Sound = "tap" | "fall" | "send" | "reason" | "sheet" | "save" | "nav" | "persona";
 
 const KEY = "hold-sound";
 const VOLUME = 0.7;
@@ -94,6 +94,10 @@ const SOUNDS: Record<Sound, (c: AudioContext) => void> = {
   },
   send: (c) => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(c, f, i * 0.07, 0.4, "triangle", 0.13)),
   sheet: (c) => tone(c, 330, 0, 0.16, "sine", 0.06, 620),
+  persona: (c) => {
+    [1046.5, 1318.5, 1568, 1760, 2093, 2637].forEach((f, i) => tone(c, f, i * 0.06, 0.5, "sine", 0.05));
+    tone(c, 196, 0.1, 1.2, "triangle", 0.08, 392);
+  },
   save: (c) => {
     tone(c, 420, 0, 0.18, "sine", 0.07, 980);
     tone(c, 980, 0.12, 0.12, "sine", 0.05, 1400);
@@ -105,6 +109,7 @@ const HAPTICS: Partial<Record<Sound, number | number[]>> = {
   send: [12, 50, 24],
   reason: 8,
   save: 10,
+  persona: [10, 60, 10, 60, 30],
 };
 
 export function sfx(name: Sound) {

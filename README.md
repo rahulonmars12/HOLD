@@ -40,6 +40,20 @@ and when you add a climb, pick one a buddy already logged at that gym to see
 how everyone got on with it. Share the link from the Buddies tab to invite
 people. Only buddies can see your log; remove someone to hide it from them.
 
+**Climbing personas.** After 5 sessions, HOLD! works out which of 12
+animals you climb like (Gecko, Monkey, Gorilla, Spider, Octopus, Mountain Goat,
+Cat, Tortoise, Honey Badger, Squirrel, Owl, Koala) from the last 90 days:
+wall angles, holds, styles, why you fall, attempts per send, flash rate and
+how well you read climbs. You get a main persona, a dash of the runner-up,
+three facts from your log and a growth tip. A full-screen reveal plays the
+first time and whenever it changes; buddies see each other's personas.
+The logic is in `lib/persona.ts`, the art in `public/personas/`.
+
+**Sound and motion.** Small synthesised sounds for every tap (special ones
+for falls, sends, reasons, sheets, saving and tabs), haptics on Android, and
+light springy animations. Settings has a switch; Reduce Motion turns the
+movement off.
+
 **First run.** A short onboarding: what HOLD! does, making an account (or
 skipping to keep the log on the phone), and the first session.
 
@@ -58,7 +72,8 @@ The service worker (offline support) only registers in production builds.
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor**, paste `supabase/migrations/0001_tickmark.sql`, and
    run it. Then do the same with `supabase/migrations/0002_username_accounts.sql`
-   and `supabase/migrations/0003_everyone_is_buddies.sql`.
+   `supabase/migrations/0003_everyone_is_buddies.sql` and
+   `supabase/migrations/0004_personas.sql`.
    These create the tables, the access rules (you and your accepted buddies
    only) and the `photos` storage bucket.
 3. Open **Authentication → Sign In / Providers → Email**. Keep the Email

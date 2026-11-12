@@ -50,6 +50,25 @@ export const nameOf = (p?: Profile | null) =>
 
 /* Profile */
 
+/** Personas are shared on the profile so buddies can see them. Needs migration 0004. */
+export async function publishPersona(persona: string, dash: string) {
+  const me = await uid();
+  const { error } = await sb().from("profiles").update({ persona, persona_dash: dash }).eq("id", me);
+  if (error) throw new Error(error.message);
+}
+
+/** Buddies' personas by id. Empty when the database doesn't have personas yet. */
+export async function personasOf(ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  try {
+    const { data, error } = await sb().from("profiles").select("id, persona").in("id", ids);
+    if (error || !data) return new Map();
+    return new Map((data as { id: string; persona: string | null }[]).filter((p) => p.persona).map((p) => [p.id, p.persona!]));
+  } catch {
+    return new Map();
+  }
+}
+
 export async function getMyProfile(): Promise<Profile | null> {
   const me = await uid();
   const { data, error } = await sb().from("profiles").select("id, username, display_name").eq("id", me).maybeSingle();

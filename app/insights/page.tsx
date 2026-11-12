@@ -12,6 +12,8 @@ import { getMeta, setMeta } from "@/lib/db";
 import { percent, plural } from "@/lib/format";
 import { useData, type Data } from "@/lib/hooks";
 import { useCountUp } from "@/lib/useCountUp";
+import { MIN_SESSIONS, PERSONAS, personaImage } from "@/lib/persona";
+import { usePersona, usePersonaReveal } from "@/lib/usePersona";
 import {
   MIN_SAMPLE,
   biggestGap,
@@ -118,6 +120,8 @@ function InsightsView({ data }: { data: Data }) {
           </button>
         ))}
       </div>
+
+      <PersonaCard data={data} />
 
       {sum.attempts === 0 ? (
         <p className="muted mt-6">No attempts in this time range. Try a longer one.</p>
@@ -492,5 +496,50 @@ function RouteReading({ reading: r }: { reading: Reading }) {
         </>
       )}
     </section>
+  );
+}
+
+function PersonaCard({ data }: { data: Data }) {
+  const result = usePersona(data);
+  usePersonaReveal(result);
+  if (!result) return null;
+  if (!result.ready) {
+    return (
+      <Link href="/persona" className="relative mt-4 flex items-center gap-3 rounded-[1.75rem] bg-white py-3 pl-3 pr-5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={personaImage("gecko")} alt="" width={64} height={64} className="flex-none opacity-40 grayscale" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[0.9375rem] font-bold">Your climbing persona</span>
+          <span className="muted block text-sm">
+            Unlocks after {MIN_SESSIONS} sessions: {Math.min(result.sessions, MIN_SESSIONS)} of {MIN_SESSIONS} so far
+          </span>
+        </span>
+      </Link>
+    );
+  }
+  const info = PERSONAS[result.persona.id];
+  const dash = PERSONAS[result.persona.dash];
+  return (
+    <Link href="/persona" className="relative mt-4 block overflow-hidden rounded-[1.875rem] px-4 pb-4 pt-3" style={{ background: info.tint }}>
+      <span
+        aria-hidden
+        className="rays pointer-events-none absolute -left-24 -top-28 h-80 w-80 rounded-full"
+        style={{ background: "repeating-conic-gradient(rgb(255 255 255 / 0.5) 0deg 9deg, transparent 9deg 20deg)" }}
+      />
+      <span className="relative flex items-center gap-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={personaImage(info.id)} alt="" width={104} height={104} className="bob -ml-1 flex-none" />
+        <span className="min-w-0">
+          <span className="block text-[0.8125rem] font-bold">You climb like {info.article}</span>
+          <span className="display block text-[1.625rem] leading-tight">{info.name}</span>
+          <span className="mt-1.5 inline-flex h-8 items-center gap-1 rounded-full bg-white/85 pl-0.5 pr-3 text-[0.8125rem] font-bold">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={personaImage(dash.id)} alt="" width={28} height={28} />
+            dash of {dash.name}
+          </span>
+        </span>
+      </span>
+      <span className="relative mt-2 block text-[0.9375rem] font-medium leading-relaxed">{info.line}</span>
+    </Link>
   );
 }

@@ -5,12 +5,15 @@ import { ProfileForm, SignIn, useProfile } from "@/components/Account";
 import { GradeChip, describeClimb } from "@/components/ClimbCards";
 import { CornerHold, Hold } from "@/components/Hold";
 import { dayLabel, duration } from "@/lib/format";
-import { useNow } from "@/lib/hooks";
+import { useData, useNow } from "@/lib/hooks";
+import { PERSONAS, personaImage, type PersonaId } from "@/lib/persona";
+import { usePersona } from "@/lib/usePersona";
 import {
   acceptBuddy,
   climbingNow,
   listBuddies,
   nameOf,
+  personasOf,
   recentSends,
   removeBuddy,
   requestBuddy,
@@ -64,6 +67,8 @@ function Feed({ username }: { username: string }) {
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState("");
   const [addMsg, setAddMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [personas, setPersonas] = useState<Map<string, string>>(new Map());
+  const mine = usePersona(useData());
 
   const load = useCallback(async () => {
     try {
@@ -71,6 +76,7 @@ function Feed({ username }: { username: string }) {
       setLinks(l);
       setLive(n);
       setSends(s);
+      setPersonas(await personasOf(l.filter((x) => x.status === "accepted").map((x) => x.other.id)));
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't load buddies.");
@@ -135,6 +141,14 @@ function Feed({ username }: { username: string }) {
         </section>
       )}
 
+      <Crew
+        me={mine?.ready ? mine.persona.id : undefined}
+        buddies={accepted.flatMap((l) => {
+          const p = personas.get(l.other.id);
+          return p ? [{ id: l.other.id, name: nameOf(l.other), persona: p }] : [];
+        })}
+      />
+
       <section className="mt-6">
         <div className="flex items-center gap-2.5">
           <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-mint-deep" />
@@ -146,7 +160,11 @@ function Feed({ username }: { username: string }) {
           <ul className="mt-3 flex flex-col gap-2">
             {live.map((l) => (
               <li key={l.session.id} className="flex items-center gap-3.5 rounded-[1.5rem] bg-white py-3 pl-3 pr-5">
-                <Hold kind="jug" fill="#5FDDB0" shade="#3FC998" size={44} rotate={-8} />
+                {personas.get(l.who.id) ? (
+                  <PersonaFace id={personas.get(l.who.id)!} size={52} />
+                ) : (
+                  <Hold kind="jug" fill="#5FDDB0" shade="#3FC998" size={44} rotate={-8} />
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block font-bold">{nameOf(l.who)}</span>
                   <span className="muted block truncate text-sm">
@@ -243,7 +261,8 @@ function Feed({ username }: { username: string }) {
           <h2 className="h-card">Your buddies ({accepted.length})</h2>
           <ul className="mt-3 flex flex-col gap-2">
             {[...accepted, ...outgoing].map((l) => (
-              <li key={l.other.id} className="flex items-center gap-3 rounded-[1.5rem] bg-white py-3 pl-5 pr-3">
+              <li key={l.other.id} className="flex items-center gap-3 rounded-[1.5rem] bg-white py-3 pl-4 pr-3">
+                {personas.get(l.other.id) && <PersonaFace id={personas.get(l.other.id)!} size={44} />}
                 <span className="min-w-0 flex-1">
                   <span className="block font-bold">{nameOf(l.other)}</span>
                   {l.other.username && <span className="muted block text-sm">@{l.other.username}</span>}
@@ -296,5 +315,35 @@ function InviteButton() {
     >
       {copied ? "Link copied" : "Share the HOLD! link"}
     </button>
+  );
+}
+
+function PersonaFace({ id, size }: { id: string; size: number }) {
+  if (!(id in PERSONAS)) return null;
+  const info = PERSONAS[id as PersonaId];
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={personaImage(info.id)} alt={info.name} title={info.name} width={size} height={size} className="flex-none" />
+  );
+}
+
+/** Everyone's persona side by side, once at least one buddy has one. */
+function Crew({ me, buddies }: { me?: PersonaId; buddies: { id: string; name: string; persona: string }[] }) {
+  const known = buddies.filter((b) => b.persona in PERSONAS);
+  if (known.length === 0) return null;
+  const people = [...(me ? [{ id: "me", name: "You", persona: me as string }] : []), ...known];
+  return (
+    <section className="mt-6 rounded-[1.875rem] bg-white px-3 pb-4 pt-4">
+      <h2 className="h-card px-2">Your crew</h2>
+      <ul className="mt-3 flex gap-1 overflow-x-auto pb-1">
+        {people.map((p) => (
+          <li key={p.id} className="flex w-[5.25rem] flex-none flex-col items-center text-center">
+            <PersonaFace id={p.persona} size={72} />
+            <span className="mt-1 block w-full truncate text-sm font-bold">{p.name}</span>
+            <span className="muted block w-full truncate text-xs">{PERSONAS[p.persona as PersonaId].name}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
