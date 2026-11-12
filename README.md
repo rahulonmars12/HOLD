@@ -1,102 +1,109 @@
-# HOLD! (formerly Tickmark)
+# HOLD!
 
 A bouldering log that records every attempt, not only the sends, and turns
-the falls into a picture of what to work on.
+the falls into a picture of what to work on. Optional accounts sync the log
+between devices, an AI coach reads your log, and buddies at the same gym can
+see each other's sessions and share climbs.
 
-Built as an installable web app (PWA). All data stays on the device in
-IndexedDB, so it needs no account and no backend, and it keeps working with
-no signal at the gym.
+Built as an installable web app (PWA). The log lives on the device in
+IndexedDB, so logging works with no signal at the gym. Everything below
+"Accounts" is optional: with no keys set, HOLD! runs entirely on the phone.
 
 ## What it does
 
-**Session.** Start a session at a gym, add each climb you get on (grade, hold
-colour, wall angle, holds, style), then log attempts with two big buttons:
-Fell and Sent. After a fall, one more tap records why you came off: wrong
-beta, couldn't hold it, didn't commit, foot slipped, missed the hold, or too
-tired. Unsent climbs stay as open projects across sessions.
+**Session.** Start a session at a gym, add each climb (photo and name,
+grade slider, hold colour including your own colours, wall angle, holds,
+style), then log attempts with two big buttons: Fell and Sent. After a fall,
+one more tap records why you came off. Unsent climbs stay open across
+sessions.
 
-**Route reading.** Before the first attempt you can guess how many attempts a
-climb will take and write down your beta. After the send, you say whether the
-read held up and what actually worked.
+**Route reading.** Before the first attempt, guess how many attempts it will
+take and write your beta. After the send, say whether the read held up.
 
-**Insights.** For the last 30 days, 90 days or all time:
+**Insights.** Grade pyramid, strengths and weaknesses by angle, hold and
+style, why you fall, and how good your reads are, for 30 days, 90 days or
+all time.
 
-- Grade pyramid: flashes, sends after falls, and unsent climbs per grade.
-- Strengths and weaknesses: best send and share sent for each wall angle,
-  hold type and style, with the weakest one called out.
-- Why you fall: share of falls by reason, compared with the period before,
-  with a practice pointer for the most common one.
-- Route reading: how often your read held up and whether your attempt
-  guesses run optimistic or pessimistic.
+**Accounts and sync.** Sign in with a six-digit email code. Every change is
+saved on the phone first and synced in the background; the newest edit wins.
+Signing out clears the phone but keeps everything in your account.
 
-**Log.** Every session with its climbs and tallies, and every climb by status
-(open, sent, retired).
+**AI coach.** On a climb: a short read of your attempts and what to try
+next, and you can ask it a question. On Insights: what to practise based on
+the last 90 days. When adding a climb: take a photo and HOLD! fills in the
+colour, angle, holds and style (and the grade if a tag is readable).
 
-**Settings.** Save and restore a JSON backup, load demo data to preview
-Insights, delete everything.
+**Buddies.** Pick a username, add buddies by theirs. See who is climbing
+right now, their recent sends with beta, and when you add a climb, pick one
+a buddy already logged at that gym to see how everyone got on with it.
+Only accepted buddies can see your log.
 
 ## Run it
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm run build    # production build
-npm start        # serve the production build
+npm run build && npm start
 ```
 
 The service worker (offline support) only registers in production builds.
 
-## Deploy to Vercel
+## Turn on accounts, sync and buddies (Supabase)
 
-1. Create an empty repository on GitHub and push this folder to it:
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In the project, open **SQL Editor**, paste the contents of
+   `supabase/migrations/0001_tickmark.sql`, and run it. This creates the
+   tables, the access rules (you and your accepted buddies only) and the
+   `photos` storage bucket.
+3. Open **Authentication → Emails → Templates → Magic Link** and make sure
+   the email contains the code, for example:
 
-   ```bash
-   git remote add origin https://github.com/<you>/tickmark.git
-   git push -u origin main
+   ```html
+   <h2>Your HOLD! code</h2>
+   <p>Enter this code in the app: <strong>{{ .Token }}</strong></p>
    ```
 
-2. In Vercel, choose Add New, then Project, and import the repository.
-   Vercel detects Next.js; no settings or environment variables are needed.
-3. Open the deployed URL on your phone and add it to the home screen.
+4. Open **Authentication → URL Configuration** and set the Site URL to your
+   Vercel URL.
+5. Open **Project Settings → API Keys** and copy the Project URL and the
+   publishable key (`sb_publishable_…`).
+6. In Vercel, open the project → **Settings → Environment Variables** and add:
 
-Data is stored per browser and per domain. If you later move to a custom
-domain, save a backup first and restore it on the new address.
+   | Name | Value |
+   | --- | --- |
+   | `NEXT_PUBLIC_SUPABASE_URL` | the Project URL |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the publishable key |
 
-## How it is put together
+7. Redeploy (Deployments → ⋯ → Redeploy). These values are built into the
+   app, so they only take effect after a new deploy.
 
-```
-app/
-  page.tsx            Session: start screen and the live session
-  new/page.tsx        Add a climb, with the pre-attempt read
-  climb/page.tsx      One climb: tally, Fell and Sent, attempt history
-  log/page.tsx        Sessions and climbs
-  insights/page.tsx   Charts and callouts
-  settings/page.tsx   Backup, demo data, reset
-  manifest.ts         Web app manifest
-components/           Tally marks, climb rows, chips, bottom sheet, nav
-lib/
-  types.ts            Session, Climb, Attempt
-  constants.ts        Grades, tags, fall reasons and their practice pointers
-  db.ts               IndexedDB (Dexie) reads and writes, backup and restore
-  stats.ts            Pure functions behind every number in Insights
-  demo.ts             Deterministic demo data
-public/sw.js          Service worker: caches every screen for offline use
-```
+Supabase's built-in email sender is limited to a few emails an hour, which
+is fine for you and a few buddies. For more, add your own SMTP server under
+Authentication → Emails.
 
-Three tables: `sessions`, `climbs`, `attempts`. An attempt belongs to one
-climb and one session. A climb's status (`project`, `sent`, `retired`) is
-kept in step with its attempts in `lib/db.ts`.
+## Turn on the AI coach (Anthropic)
 
-`lib/stats.ts` has no dependency on React or the database, so the numbers can
-be tested or reused on a server later.
+The AI features need an account (above), so usage is tied to a person.
 
-## Next steps
+1. Create an API key at [console.anthropic.com](https://console.anthropic.com)
+   and add a little credit.
+2. In Vercel, add the environment variable `ANTHROPIC_API_KEY` with the key.
+   Optional: `TICKMARK_AI_MODEL` to use a different Claude model
+   (default `claude-sonnet-5-5`).
+3. Redeploy.
 
-Planned but not built yet:
+Each climber can make 40 AI requests a day. A request typically costs around
+a cent. When you use the coach, a summary of the relevant part of your log
+(grades, tags, attempts, notes) is sent to Anthropic; a photo is sent when
+you use "Fill in tags from photo". The key stays on the server and is never
+sent to the phone.
 
-- Deliberate practice: a technique curriculum with drills, and one focus per
-  session chosen from the weakness profile.
-- Sync across devices with accounts (for example Supabase), keeping the
-  local database as the offline copy.
-- Video clips attached to attempts, with fail and send side by side.
-- A written session summary and next-session suggestion from an LLM.
+## Deploy to Vercel
+
+The repository is connected to Vercel, which deploys every push to `main`.
+Open the deployed URL on your phone and add it to the home screen.
+
+## Data
+
+Backups (Settings → Back up) are JSON files you can restore on any device.
+Existing logs from the Tickmark version carry over automatically.

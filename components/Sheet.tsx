@@ -7,11 +7,14 @@ export function Sheet({
   open,
   onClose,
   title,
+  aside,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Shown to the right of the title, such as an attempt number. */
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -36,8 +39,12 @@ export function Sheet({
     >
       {open && (
         <div>
-          <h2 className="h-section mb-4">{title}</h2>
-          {children}
+          <div aria-hidden className="mx-auto h-[5px] w-11 rounded-full bg-line" />
+          <div className="mt-4 flex items-start justify-between gap-3">
+            <h2 className="display text-[1.625rem] leading-[1.12]">{title}</h2>
+            {aside}
+          </div>
+          <div className="mt-4">{children}</div>
         </div>
       )}
     </dialog>

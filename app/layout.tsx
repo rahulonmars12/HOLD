@@ -1,19 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/big-shoulders";
-import "@fontsource-variable/instrument-sans";
+import "@fontsource-variable/unbounded";
+import "@fontsource-variable/dm-sans";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { SyncAgent } from "@/components/SyncAgent";
 
 export const metadata: Metadata = {
-  title: "Tickmark",
-  description:
-    "A bouldering log that records every attempt and shows what to work on.",
-  applicationName: "Tickmark",
+  title: "HOLD!",
+  description: "A bouldering log that records every attempt, shows what holds you back, and lets you climb with your buddies.",
+  applicationName: "HOLD!",
   appleWebApp: {
     capable: true,
-    title: "Tickmark",
-    statusBarStyle: "black-translucent",
+    title: "HOLD!",
+    statusBarStyle: "default",
   },
   icons: {
     icon: [
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1a2230",
+  themeColor: "#EEF2FB",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -38,12 +38,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full">
-        <div className="mx-auto w-full max-w-md px-4 pt-[calc(1.25rem+env(safe-area-inset-top))]">
+      <body className="min-h-full overflow-x-clip">
+        <div className="relative mx-auto w-full max-w-md px-5 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           {children}
         </div>
         <Nav />
         <ServiceWorker />
+        <SyncAgent />
       </body>
     </html>
   );

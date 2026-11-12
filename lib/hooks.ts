@@ -1,9 +1,10 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect, useState } from "react";
-import { db } from "./db";
-import type { Attempt, Climb, Session } from "./types";
+import { useEffect, useMemo, useState } from "react";
+import { db, getCustomColors } from "./db";
+import { photoUrl } from "./social";
+import type { Attempt, Climb, CustomColor, Session } from "./types";
 
 export interface Data {
   sessions: Session[];
@@ -31,6 +32,10 @@ export function useData(): Data | undefined {
   }, []);
 }
 
+export function useCustomColors(): CustomColor[] {
+  return useLiveQuery(getCustomColors, []) ?? [];
+}
+
 /** The current time, refreshed every half minute, for elapsed-time labels. */
 export function useNow() {
   const [now, setNow] = useState(() => Date.now());
@@ -39,4 +44,28 @@ export function useNow() {
     return () => clearInterval(timer);
   }, []);
   return now;
+}
+
+/** A displayable URL for a climb's photo: the local copy, else the cloud copy. */
+export function usePhoto(climbId: string | undefined, path?: string): string | null {
+  const local = useLiveQuery(async () => (climbId ? db.photos.get(climbId) : undefined), [climbId]);
+  const localUrl = useMemo(() => (local?.blob ? URL.createObjectURL(local.blob) : null), [local]);
+  const [remote, setRemote] = useState<{ path: string; url: string | null } | null>(null);
+
+  useEffect(() => () => {
+    if (localUrl) URL.revokeObjectURL(localUrl);
+  }, [localUrl]);
+
+  useEffect(() => {
+    if (localUrl || !path) return;
+    let alive = true;
+    photoUrl(path).then((url) => {
+      if (alive) setRemote({ path, url });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [localUrl, path]);
+
+  return localUrl ?? (remote && remote.path === path ? remote.url : null);
 }

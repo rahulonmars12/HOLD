@@ -1,9 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import { useLiveQuery } from "dexie-react-hooks";
 import { useMemo, useState } from "react";
-import { Chips } from "@/components/Chips";
+import { AngleIcon, holdColorsFor } from "@/components/ClimbForm";
+import { CoachCard } from "@/components/Coach";
+import { Cta } from "@/components/Cta";
+import { CornerHold, Hold } from "@/components/Hold";
+import { askCoach, insightsContext } from "@/lib/ai";
 import { gradeLabel } from "@/lib/constants";
+import { getMeta, setMeta } from "@/lib/db";
 import { percent, plural } from "@/lib/format";
 import { useData, type Data } from "@/lib/hooks";
 import {
@@ -22,6 +27,8 @@ import {
   type TagRow,
   type Window,
 } from "@/lib/stats";
+import type { Angle, CoachNote, Hold as HoldKind } from "@/lib/types";
+import Link from "next/link";
 
 type Range = "30" | "90" | "all";
 const RANGES: { id: Range; label: string }[] = [
@@ -31,138 +38,146 @@ const RANGES: { id: Range; label: string }[] = [
 ];
 const DAY = 24 * 60 * 60 * 1000;
 
-const DIMENSION_TITLES: Record<Dimension, string> = {
-  angle: "Wall angle",
-  holds: "Holds",
-  styles: "Style",
-};
-
 export default function InsightsPage() {
   const data = useData();
-  // Rendered only once the log has loaded, which also keeps the clock read
-  // inside InsightsView out of the static shell.
   if (!data) return null;
+  if (data.attempts.length === 0) return <Empty />;
   return <InsightsView data={data} />;
+}
+
+function Empty() {
+  return (
+    <main>
+      <h1 className="h-page">Insights</h1>
+      <div className="card mt-6 px-6 py-7 text-center">
+        <div aria-hidden className="relative mx-auto h-40 w-64">
+          <Hold kind="volume" fill="#FF9CC2" shade="#F582AD" size={130} rotate={-8} style={{ position: "absolute", left: 10, top: 20 }} />
+          <Hold kind="pinch" fill="#5FDDB0" shade="#3FC998" size={84} rotate={18} style={{ position: "absolute", left: 140, top: 0 }} />
+          <Hold kind="jug" fill="#FFDD55" shade="#E8BE2A" size={92} style={{ position: "absolute", left: 140, top: 74 }} />
+        </div>
+        <h2 className="display mt-3 text-[1.375rem] leading-tight">Nothing to show yet</h2>
+        <p className="muted mt-2.5 text-[0.9375rem] leading-relaxed">
+          Log a couple of sessions and this fills in: your grade pyramid, the holds and angles that hold you back, why
+          you fall, and how well you read climbs.
+        </p>
+        <Cta href="/" bare className="mt-5">
+          Start a session
+        </Cta>
+        <Link href="/settings#demo" className="mt-1 flex min-h-12 items-center justify-center text-[0.9375rem] font-bold underline underline-offset-4">
+          Preview with demo data
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+function SectionTitle({ hold, rotate = 0, children }: { hold: HoldKind; rotate?: number; children: React.ReactNode }) {
+  const [fill, shade] = holdColorsFor(hold);
+  return (
+    <h2 className="h-card flex items-center gap-2.5">
+      <Hold kind={hold} fill={fill} shade={shade} size={34} rotate={rotate} />
+      {children}
+    </h2>
+  );
 }
 
 function InsightsView({ data }: { data: Data }) {
   const [range, setRange] = useState<Range>("90");
-  // Fixed when the screen opens so the charts do not shift while reading.
   const [now] = useState(() => Date.now());
+  const coach = useLiveQuery(() => getMeta<CoachNote>("insightsCoach"), []);
 
   const view = useMemo(() => {
     const days = range === "all" ? null : Number(range);
-    const w: Window = {
-      since: days ? now - days * DAY : 0,
-      until: Infinity,
-    };
-    const previous: Window | null = days
-      ? { since: now - 2 * days * DAY, until: now - days * DAY }
-      : null;
+    const w: Window = { since: days ? now - days * DAY : 0, until: Infinity };
+    const previous: Window | null = days ? { since: now - 2 * days * DAY, until: now - days * DAY } : null;
     const stats = climbStats(data.climbs, data.attempts);
     const sum = summary(stats, data.sessions, w);
-    const profiles = (["angle", "holds", "styles"] as Dimension[]).map((d) => ({
-      dimension: d,
-      rows: tagProfile(stats, d, w),
-    }));
+    const profiles = (["holds", "angle", "styles"] as Dimension[]).map((d) => ({ dimension: d, rows: tagProfile(stats, d, w) }));
     return {
       sum,
       pyramid: pyramid(stats, w),
       profiles,
-      gap: biggestGap(
-        profiles.flatMap((p) => p.rows),
-        sum.topGrade,
-      ),
+      gap: biggestGap(profiles.flatMap((p) => p.rows), sum.topGrade),
       reasons: failReasons(data.attempts, w),
       previousReasons: previous ? failReasons(data.attempts, previous) : null,
       reading: reading(stats, w),
     };
   }, [data, range, now]);
 
-  const { sum } = view;
+  const { sum, gap } = view;
 
   return (
     <main>
-      <h1 className="h-page">Insights</h1>
-      <div className="mt-4">
-        <Chips
-          label="Time range"
-          options={RANGES}
-          value={[range]}
-          onChange={(v) => v[0] && setRange(v[0])}
-        />
+      <CornerHold kind="volume" fill="#FF9CC2" shade="#F582AD" rotate={8} size={230} right={-76} top={-80} />
+      <h1 className="h-page relative">Insights</h1>
+      <div role="group" aria-label="Time range" className="segmented relative mt-4">
+        {RANGES.map((r) => (
+          <button key={r.id} type="button" aria-pressed={range === r.id} onClick={() => setRange(r.id)}>
+            {r.label}
+          </button>
+        ))}
       </div>
 
       {sum.attempts === 0 ? (
-        <div className="mt-6">
-          <p className="muted">
-            {data.attempts.length === 0
-              ? "Nothing to show yet. Log a session and your grade pyramid, weak styles and fall reasons appear here."
-              : "No attempts in this time range. Try a longer one."}
-          </p>
-          {data.attempts.length === 0 && (
-            <Link href="/settings" className="btn mt-4">
-              Preview with demo data
-            </Link>
-          )}
-        </div>
+        <p className="muted mt-6">No attempts in this time range. Try a longer one.</p>
       ) : (
         <>
-          <dl className="mt-5 grid grid-cols-2 gap-2">
+          <dl className="mt-4 grid grid-cols-2 gap-2.5">
             <Tile label="Sessions" value={String(sum.sessions)} />
-            <Tile
-              label="Sends"
-              value={String(sum.sends)}
-              note={`from ${plural(sum.climbs, "climb")}`}
-            />
-            <Tile
-              label="Flash rate"
-              value={sum.flashRate === null ? "n/a" : percent(sum.flashRate)}
-              note={`${plural(sum.flashes, "flash", "flashes")}`}
-            />
-            <Tile
-              label="Top send"
-              value={sum.topGrade === null ? "None yet" : gradeLabel(sum.topGrade)}
-            />
+            <Tile label={`Sends, of ${plural(sum.climbs, "climb")}`} value={String(sum.sends)} />
+            <Tile label="Flash rate" value={sum.flashRate === null ? "n/a" : percent(sum.flashRate)} />
+            <Tile label="Top send" value={sum.topGrade === null ? "None" : gradeLabel(sum.topGrade)} accent />
           </dl>
 
-          {view.gap && (
-            <section className="mt-6 rounded-2xl bg-tape p-4 text-tape-ink">
-              <h2 className="h-section">
-                Work on {view.gap.row.label.toLowerCase()}
-              </h2>
-              <p className="mt-1.5">
-                {view.gap.row.topSent === null
-                  ? `You have not sent any of the ${view.gap.row.tried} you tried.`
-                  : `Your best send here is ${gradeLabel(view.gap.row.topSent)}, ${plural(view.gap.grades, "grade")} below your ${gradeLabel(view.gap.overallTop)}.`}{" "}
-                {view.gap.row.sent} of {view.gap.row.tried} sent
-                {view.gap.row.attemptsPerSend !== null &&
-                  `, ${view.gap.row.attemptsPerSend.toFixed(1)} attempts per send`}
-                . Picking these on purpose is the quickest way to raise your
-                floor.
+          {gap && (
+            <section className="tile relative mt-3 bg-ink py-5 pl-5 pr-28 text-white">
+              <span aria-hidden className="absolute -bottom-5 -right-6">
+                {gap.row.dimension === "holds" ? (
+                  <Hold
+                    kind={gap.row.id as HoldKind}
+                    fill={holdColorsFor(gap.row.id as HoldKind)[0]}
+                    shade={holdColorsFor(gap.row.id as HoldKind)[1]}
+                    size={130}
+                    rotate={-8}
+                  />
+                ) : gap.row.dimension === "angle" ? (
+                  <span className="flex h-28 w-28 items-center justify-center rounded-full bg-white">
+                    <AngleIcon angle={gap.row.id as Angle} size={72} />
+                  </span>
+                ) : (
+                  <Hold kind="sloper" fill="#FFA45C" shade="#F58F40" size={130} rotate={-8} />
+                )}
+              </span>
+              <h2 className="display relative text-[1.375rem] leading-tight">Work on {gap.row.label.toLowerCase()}</h2>
+              <p className="relative mt-2 text-[0.9375rem] leading-relaxed">
+                {gap.row.topSent === null
+                  ? `None of the ${gap.row.tried} you tried are sent yet.`
+                  : `Your best send here is ${gradeLabel(gap.row.topSent)}, ${plural(gap.grades, "grade")} under your ${gradeLabel(gap.overallTop)}.`}{" "}
+                {gap.row.sent} of {gap.row.tried} sent.
               </p>
             </section>
           )}
 
+          <div className="mt-3">
+            <CoachCard
+              note={coach}
+              cta="Get a coaching summary"
+              intro="A read on the biggest pattern in your climbing, and what to focus on this week."
+              request={async (question) => {
+                const note = await askCoach("insights", insightsContext(data.climbs, data.attempts, data.sessions), question);
+                await setMeta("insightsCoach", note);
+              }}
+            />
+          </div>
+
           <Pyramid rows={view.pyramid} />
 
-          <section className="mt-9">
-            <h2 className="h-section">Where you are strong and weak</h2>
-            <p className="muted mt-1 text-sm">
-              Best send and share of climbs sent, for each kind of climb you
-              tagged.
-            </p>
-            {view.profiles.map(
-              (p) =>
-                p.rows.length > 0 && (
-                  <Profile
-                    key={p.dimension}
-                    title={DIMENSION_TITLES[p.dimension]}
-                    rows={p.rows}
-                    weakest={view.gap?.row}
-                  />
-                ),
-            )}
+          <section className="card mt-3 pb-5">
+            <SectionTitle hold="pinch" rotate={24}>
+              Strong and weak
+            </SectionTitle>
+            <p className="muted mt-1.5 text-sm leading-snug">Best send, and how many you sent of those you tried.</p>
+            <StrongWeak profiles={view.profiles} weakest={gap?.row} />
           </section>
 
           <WhyYouFall reasons={view.reasons} previous={view.previousReasons} />
@@ -173,272 +188,200 @@ function InsightsView({ data }: { data: Data }) {
   );
 }
 
-function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
+function Tile({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="panel">
-      <dt className="muted text-sm">{label}</dt>
-      <dd className="mt-0.5 text-3xl font-semibold">{value}</dd>
-      {note && <dd className="muted text-sm">{note}</dd>}
+    <div className={`rounded-[1.625rem] px-[1.125rem] pb-4 pt-3.5 ${accent ? "bg-sun" : "bg-white"}`}>
+      <dt className={`text-sm font-semibold ${accent ? "" : "muted"}`}>{label}</dt>
+      <dd className="display mt-0.5 text-[2.125rem] leading-tight">{value}</dd>
     </div>
-  );
-}
-
-function Legend({ items }: { items: { color: string; label: string }[] }) {
-  return (
-    <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-      {items.map((i) => (
-        <li key={i.label} className="flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="size-2.5 rounded-sm"
-            style={{ background: i.color }}
-          />
-          <span className="muted">{i.label}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Stacked horizontal segments with a 2px surface gap between them. */
-function Segments({
-  parts,
-  scale,
-  height,
-}: {
-  parts: { value: number; color: string }[];
-  /** The value that fills the full width. */
-  scale: number;
-  height: number;
-}) {
-  const shown = parts.filter((p) => p.value > 0);
-  return (
-    <span className="flex gap-0.5" style={{ height }}>
-      {shown.map((p, i) => (
-        <span
-          key={i}
-          style={{
-            width: `${(p.value / scale) * 100}%`,
-            minWidth: 4,
-            background: p.color,
-            borderRadius:
-              i === shown.length - 1 ? "0 4px 4px 0" : undefined,
-          }}
-        />
-      ))}
-    </span>
   );
 }
 
 function Pyramid({ rows }: { rows: PyramidRow[] }) {
   const [selected, setSelected] = useState<number | null>(null);
   if (rows.length === 0) return null;
-  const scale = Math.max(...rows.map((r) => r.flashes + r.sends + r.open), 1);
-  const detail = rows.find((r) => r.grade === selected);
+  const detail = rows.find((r) => r.grade === selected) ?? rows.reduce((a, b) => (b.flashes + b.sends + b.open > a.flashes + a.sends + a.open ? b : a));
 
   return (
-    <section className="mt-9">
-      <h2 className="h-section">Grade pyramid</h2>
-      <p className="muted mt-1 text-sm">
-        Climbs at each grade. A wide base under your top grade means the top is
-        solid. Tap a row for the numbers.
+    <section className="card mt-3">
+      <SectionTitle hold="jug" rotate={-8}>
+        Grade pyramid
+      </SectionTitle>
+      <p className="muted mt-1.5 text-sm leading-snug">
+        A wide base under your top grade means the top is solid. Tap a row for the numbers.
       </p>
-      <Legend
-        items={[
-          { color: "var(--color-viz-amber)", label: "Flashed" },
-          { color: "var(--color-viz-blue)", label: "Sent after falls" },
-          { color: "var(--color-viz-neutral)", label: "Not sent yet" },
-        ]}
-      />
-      <ul className="mt-3">
+      <ul className="muted mt-3 flex flex-wrap gap-x-3.5 gap-y-1.5 text-sm font-medium">
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden className="mk mk-jug mk-flash" />
+          Flashed
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden className="mk mk-jug mk-sent" />
+          Sent after falls
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden className="mk mk-jug mk-open" />
+          Not sent yet
+        </li>
+        <li>Each hold is one climb.</li>
+      </ul>
+      <ul className="mt-3.5 flex flex-col gap-1">
         {rows.map((r) => {
           const sent = r.flashes + r.sends;
-          const isSelected = r.grade === selected;
+          const on = r.grade === detail.grade;
           return (
             <li key={r.grade}>
               <button
                 type="button"
-                aria-pressed={isSelected}
+                aria-pressed={on}
                 aria-label={`${gradeLabel(r.grade)}: ${r.flashes} flashed, ${r.sends} sent after falls, ${r.open} not sent yet`}
-                onClick={() => setSelected(isSelected ? null : r.grade)}
-                className={`flex min-h-9 w-full items-center gap-3 rounded-lg px-1 ${
-                  isSelected ? "bg-mat-2" : ""
-                }`}
+                onClick={() => setSelected(r.grade)}
+                className={`-mx-1.5 flex w-[calc(100%+0.75rem)] items-center gap-2 rounded-[0.875rem] px-1.5 py-1 text-left ${on ? "bg-wall" : ""}`}
               >
-                <span className="grade w-9 text-left text-2xl">
-                  {gradeLabel(r.grade)}
+                <span className="display w-8 flex-none text-sm font-bold">{gradeLabel(r.grade)}</span>
+                <span aria-hidden className="flex flex-1 flex-wrap gap-0.5">
+                  {[...Array(r.flashes)].map((_, i) => (
+                    <span key={`f${i}`} className="mk mk-jug mk-flash" />
+                  ))}
+                  {[...Array(r.sends)].map((_, i) => (
+                    <span key={`s${i}`} className="mk mk-jug mk-sent" />
+                  ))}
+                  {[...Array(r.open)].map((_, i) => (
+                    <span key={`o${i}`} className="mk mk-jug mk-open" />
+                  ))}
                 </span>
-                <span className="flex flex-1 items-center gap-2">
-                  <span className="block flex-1">
-                    <Segments
-                      height={18}
-                      scale={scale * 1.18}
-                      parts={[
-                        { value: r.flashes, color: "var(--color-viz-amber)" },
-                        { value: r.sends, color: "var(--color-viz-blue)" },
-                        { value: r.open, color: "var(--color-viz-neutral)" },
-                      ]}
-                    />
-                  </span>
-                </span>
-                <span className="w-16 text-right text-sm tabular-nums">
-                  {sent} <span className="muted">sent</span>
-                </span>
+                <span className="muted w-14 flex-none text-right text-sm font-semibold">{sent} sent</span>
               </button>
             </li>
           );
         })}
       </ul>
-      <p className="muted mt-2 min-h-6 text-sm" aria-live="polite">
-        {detail &&
-          `${gradeLabel(detail.grade)}: ${detail.flashes} flashed, ${detail.sends} sent after falls, ${detail.open} not sent yet.`}
+      <p className="mt-3 rounded-2xl bg-wall px-3.5 py-2.5 text-sm" aria-live="polite">
+        {gradeLabel(detail.grade)}: {detail.flashes} flashed, {detail.sends} sent after falls, {detail.open} not sent yet.
       </p>
     </section>
   );
 }
 
-function Profile({
-  title,
-  rows,
-  weakest,
-}: {
-  title: string;
-  rows: TagRow[];
-  weakest?: TagRow;
-}) {
+const DIM_TITLES: Record<Dimension, string> = { holds: "Holds", angle: "Wall angle", styles: "Style" };
+
+function StrongWeak({ profiles, weakest }: { profiles: { dimension: Dimension; rows: TagRow[] }[]; weakest?: TagRow }) {
+  const [showStyles, setShowStyles] = useState(false);
+  const shown = profiles.filter((p) => p.rows.length > 0 && (p.dimension !== "styles" || showStyles));
   return (
-    <table className="mt-5 w-full border-collapse text-left">
-      <caption className="mb-1 text-left font-medium">{title}</caption>
-      <thead className="sr-only">
-        <tr>
-          <th>Kind</th>
-          <th>Best send</th>
-          <th>Share sent</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r) => {
-          const thin = r.tried < MIN_SAMPLE;
-          const flagged =
-            weakest?.dimension === r.dimension && weakest.id === r.id;
-          return (
-            <tr
-              key={r.id}
-              className={`border-t border-mat-3 ${thin ? "opacity-55" : ""}`}
-            >
-              <th scope="row" className="py-2.5 pr-2 font-normal">
-                {r.label}
-                {flagged && (
-                  <span className="ml-2 rounded bg-tape px-1.5 py-0.5 text-xs font-semibold text-tape-ink">
-                    weakest
-                  </span>
-                )}
-              </th>
-              <td className="grade w-12 py-2.5 text-2xl">
-                {r.topSent === null ? (
-                  <span className="muted font-sans text-sm font-normal">none</span>
-                ) : (
-                  gradeLabel(r.topSent)
-                )}
-              </td>
-              <td className="w-[42%] py-2.5 pl-2">
-                <span className="flex items-center gap-2">
-                  <span
-                    className="block h-2 flex-1 overflow-hidden rounded-full bg-mat-3"
-                    role="img"
-                    aria-label={`${percent(r.sendRate)} sent`}
-                  >
-                    <span
-                      className="block h-full rounded-full bg-viz-blue"
-                      style={{ width: `${r.sendRate * 100}%` }}
-                    />
-                  </span>
-                  <span className="w-12 text-right text-sm tabular-nums">
-                    {r.sent}
-                    <span className="muted">/{r.tried}</span>
-                  </span>
-                </span>
-              </td>
+    <>
+      {shown.map((p) => (
+        <table key={p.dimension} className="mt-4 w-full border-collapse text-[0.9375rem]">
+          <caption className="mb-1 text-left text-sm font-bold">{DIM_TITLES[p.dimension]}</caption>
+          <thead className="sr-only">
+            <tr>
+              <th>Kind</th>
+              <th>Best send</th>
+              <th>Sent of tried</th>
             </tr>
-          );
-        })}
-      </tbody>
-    </table>
+          </thead>
+          <tbody>
+            {p.rows.map((r) => {
+              const flagged = weakest?.dimension === r.dimension && weakest.id === r.id;
+              return (
+                <tr key={r.id} className={`border-t-[1.5px] border-wall ${r.tried < MIN_SAMPLE ? "opacity-55" : ""}`}>
+                  <th scope="row" className="py-2 pr-2 text-left font-semibold">
+                    <span className="flex items-center gap-2.5">
+                      {p.dimension === "holds" ? (
+                        <Hold kind={r.id as HoldKind} fill={holdColorsFor(r.id as HoldKind)[0]} shade={holdColorsFor(r.id as HoldKind)[1]} size={28} bolt={false} />
+                      ) : p.dimension === "angle" ? (
+                        <AngleIcon angle={r.id as Angle} size={28} />
+                      ) : null}
+                      {r.label}
+                      {flagged && <span className="rounded-full bg-ink px-2 py-0.5 text-[0.6875rem] font-bold text-white">weakest</span>}
+                    </span>
+                  </th>
+                  <td className="display w-10 text-[0.9375rem]">{r.topSent === null ? <span className="muted font-sans text-sm font-normal">none</span> : gradeLabel(r.topSent)}</td>
+                  <td className="w-[8.5rem]">
+                    <span className="flex items-center gap-3.5">
+                      <span className="h-2 flex-1 rounded bg-[#DFF6EE]" role="img" aria-label={`${r.sent} of ${r.tried} sent`}>
+                        <span className="bar-cap cap-pinch block h-2 rounded bg-mint-deep" style={{ width: `${r.sendRate * 100}%` }} />
+                      </span>
+                      <span className="w-10 text-right text-[0.8125rem] font-bold">
+                        {r.sent}
+                        <span className="muted">/{r.tried}</span>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ))}
+      {profiles.some((p) => p.dimension === "styles" && p.rows.length > 0) && (
+        <button type="button" className="btn btn-soft mt-4 min-h-11 w-full text-[0.9375rem]" onClick={() => setShowStyles(!showStyles)}>
+          {showStyles ? "Hide styles" : "Show styles"}
+        </button>
+      )}
+    </>
   );
 }
 
-function WhyYouFall({
-  reasons,
-  previous,
-}: {
-  reasons: Reasons;
-  previous: Reasons | null;
-}) {
+function WhyYouFall({ reasons, previous }: { reasons: Reasons; previous: Reasons | null }) {
   if (reasons.labelled + reasons.unlabelled === 0) return null;
   const top = reasons.rows[0];
   const maxShare = Math.max(top?.share ?? 0, 0.01);
-  // Only compare against the previous period when it has enough falls to mean something.
-  const before =
-    previous && previous.labelled >= 8
-      ? new Map(previous.rows.map((r) => [r.id, r.share]))
-      : null;
+  const before = previous && previous.labelled >= 8 ? new Map(previous.rows.map((r) => [r.id, r.share])) : null;
+  const colors: Record<string, string> = { strength: "#FFA45C", beta: "#B6C0FF", foot: "#5FDDB0", fatigue: "#C9D1E8", commit: "#FF9CC2", precision: "#FFDD55" };
 
   return (
-    <section className="mt-9">
-      <h2 className="h-section">Why you fall</h2>
+    <section className="card mt-3 pb-5">
+      <SectionTitle hold="sloper">Why you fall</SectionTitle>
       {reasons.labelled === 0 ? (
-        <p className="muted mt-1">
-          {plural(reasons.unlabelled, "fall")} logged, none with a reason. Tap a
-          reason after each fall and the pattern shows up here.
+        <p className="muted mt-2 text-[0.9375rem]">
+          {plural(reasons.unlabelled, "fall")} logged, none with a reason. Tap a reason after each fall and the pattern
+          shows up here.
         </p>
       ) : (
         <>
-          <p className="muted mt-1 text-sm">
-            Share of {plural(reasons.labelled, "fall")} with a reason
-            {before ? ", and the change from the period before" : ""}.
+          <p className="muted mt-1.5 text-sm">
+            Share of {plural(reasons.labelled, "fall")} with a reason{before ? ", and the change from the period before" : ""}.
           </p>
-          <ul className="mt-3 flex flex-col gap-2.5">
+          <ul className="mt-3.5 flex flex-col gap-3">
             {reasons.rows.map((r) => {
               const was = before?.get(r.id);
-              const change =
-                was === undefined ? null : Math.round((r.share - was) * 100);
+              const change = was === undefined ? null : Math.round((r.share - was) * 100);
               return (
                 <li key={r.id}>
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span>{r.label}</span>
-                    <span className="text-sm tabular-nums">
+                  <span className="flex items-center gap-2 text-[0.9375rem] font-semibold">
+                    <span aria-hidden className="h-3.5 w-3.5 rounded-full" style={{ background: colors[r.id] }} />
+                    <span className="flex-1">{r.label}</span>
+                    <span className="tabular-nums">
                       {percent(r.share)}
-                      <span className="muted">
-                        {" "}
-                        ({r.count})
-                        {change !== null && change !== 0 &&
-                          `, ${change > 0 ? "up" : "down"} ${Math.abs(change)} pts`}
-                      </span>
+                      {change !== null && change !== 0 && (
+                        <span className="muted text-[0.8125rem] font-medium">
+                          {" "}
+                          {change > 0 ? "up" : "down"} {Math.abs(change)}
+                        </span>
+                      )}
                     </span>
                   </span>
-                  <span className="mt-1 block h-3">
-                    <span
-                      className="block h-full bg-viz-blue"
-                      style={{
-                        width: `${Math.max((r.share / maxShare) * 100, r.count ? 1.5 : 0)}%`,
-                        borderRadius: "0 4px 4px 0",
-                      }}
-                    />
+                  <span className="mr-2.5 mt-1.5 block h-2.5 rounded-full bg-wall">
+                    {r.count > 0 && (
+                      <span
+                        className="bar-cap cap-sloper block h-2.5 rounded-full bg-ink"
+                        style={{ width: `${Math.max((r.share / maxShare) * 100, 3)}%` }}
+                      />
+                    )}
                   </span>
                 </li>
               );
             })}
           </ul>
           {top && top.count > 0 && (
-            <div className="panel mt-4">
-              <p className="font-medium">Most common: {top.label.toLowerCase()}</p>
-              <p className="muted mt-1">{top.pointer}</p>
+            <div className="mt-4 rounded-[1.375rem] bg-coral px-4 pb-4 pt-3.5">
+              <p className="font-bold">Most common: {top.label.toLowerCase()}</p>
+              <p className="mt-1.5 text-sm leading-relaxed">{top.pointer}</p>
             </div>
           )}
           {reasons.unlabelled > 0 && (
-            <p className="muted mt-3 text-sm">
-              {plural(reasons.unlabelled, "more fall")} had no reason given.
-            </p>
+            <p className="muted mt-3 text-sm">{plural(reasons.unlabelled, "more fall")} had no reason given.</p>
           )}
         </>
       )}
@@ -446,93 +389,95 @@ function WhyYouFall({
   );
 }
 
+function Segments({ parts }: { parts: { value: number; color: string }[] }) {
+  const shown = parts.filter((p) => p.value > 0);
+  return (
+    <span className="bar-cap cap-pocket mr-3 flex h-3 gap-[3px]">
+      {shown.map((p, i) => (
+        <span key={i} className="rounded-full" style={{ flex: p.value, background: p.color }} />
+      ))}
+    </span>
+  );
+}
+
 function RouteReading({ reading: r }: { reading: Reading }) {
-  const guessVerdict = () => {
+  const verdict = () => {
     if (r.guessed < 5) return null;
     if (r.harder > r.easier * 1.5 && r.harder / r.guessed >= 0.3)
-      return "You tend to underestimate climbs. Before guessing, find the crux and ask what happens if your first idea for it fails.";
+      return "You tend to underestimate climbs. Before guessing, find the crux and ask what you'd do if your first idea fails.";
     if (r.easier > r.harder * 1.5 && r.easier / r.guessed >= 0.3)
       return "You tend to overestimate climbs. You can afford to try harder ones.";
     return "Your guesses miss in both directions about equally.";
   };
-  const verdict = guessVerdict();
+  const v = verdict();
 
   return (
-    <section className="mt-9">
-      <h2 className="h-section">Route reading</h2>
+    <section className="card mt-3 pb-5">
+      <SectionTitle hold="pocket" rotate={-12}>
+        Route reading
+      </SectionTitle>
       {r.reviewed === 0 && r.guessed === 0 ? (
-        <p className="muted mt-1">
-          Guess the number of attempts when you add a climb, then say whether
-          your read held up after the send. Your accuracy is tracked here.
+        <p className="muted mt-2 text-[0.9375rem] leading-relaxed">
+          Guess the number of attempts when you add a climb, then say whether your beta held up after the send. Your
+          accuracy shows up here.
         </p>
       ) : (
         <>
           {r.reviewed > 0 && (
-            <div className="mt-3">
-              <p>
-                <span className="text-3xl font-semibold">
-                  {percent(r.score ?? 0)}
-                </span>{" "}
-                <span className="muted">
-                  read score across {plural(r.reviewed, "reviewed send")}
+            <>
+              <div className="mt-3.5 flex items-center gap-3.5">
+                <span className="relative flex h-[5.25rem] w-[5.25rem] flex-none items-center justify-center">
+                  <svg aria-hidden width="84" height="84" viewBox="0 0 40 40" className="absolute inset-0">
+                    <path d="M4 20 C4 10 12 4 21 4 C31 4 37 11 36 21 C35 31 28 36 20 36 C11 36 4 30 4 20 Z" fill="#B79BFF" />
+                    <ellipse cx="14" cy="11.5" rx="5" ry="3" fill="#1E1B3A" />
+                  </svg>
+                  <span className="display relative mt-2.5 text-xl">{percent(r.score ?? 0)}</span>
                 </span>
-              </p>
-              <div
-                className="mt-2"
-                role="img"
-                aria-label={`Read held up: yes ${r.counts.yes}, partly ${r.counts.partly}, no ${r.counts.no}`}
-              >
+                <p className="text-[0.9375rem] leading-snug">
+                  Your beta held up fully or partly on{" "}
+                  <strong>
+                    {r.counts.yes + r.counts.partly} of {r.reviewed}
+                  </strong>{" "}
+                  reviewed sends.
+                </p>
+              </div>
+              <div role="img" aria-label={`Beta held: yes ${r.counts.yes}, partly ${r.counts.partly}, no ${r.counts.no}`} className="mt-4">
                 <Segments
-                  height={10}
-                  scale={r.reviewed}
                   parts={[
-                    { value: r.counts.yes, color: "var(--color-viz-blue-light)" },
-                    { value: r.counts.partly, color: "var(--color-viz-blue-deep)" },
-                    { value: r.counts.no, color: "var(--color-viz-neutral)" },
+                    { value: r.counts.yes, color: "#1E1B3A" },
+                    { value: r.counts.partly, color: "#6E7CF0" },
+                    { value: r.counts.no, color: "#D9DEEE" },
                   ]}
                 />
               </div>
-              <Legend
-                items={[
-                  { color: "var(--color-viz-blue-light)", label: `Held up, ${r.counts.yes}` },
-                  { color: "var(--color-viz-blue-deep)", label: `Partly, ${r.counts.partly}` },
-                  { color: "var(--color-viz-neutral)", label: `Did not, ${r.counts.no}` },
-                ]}
-              />
-            </div>
+              <ul className="muted mt-2 flex gap-3.5 text-[0.8125rem]">
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#1E1B3A" }} />Held {r.counts.yes}</li>
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#6E7CF0" }} />Partly {r.counts.partly}</li>
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#D9DEEE" }} />Didn&apos;t {r.counts.no}</li>
+              </ul>
+            </>
           )}
           {r.guessed > 0 && (
-            <div className="mt-6">
-              <p>
-                <span className="text-3xl font-semibold">
-                  {r.right} of {r.guessed}
-                </span>{" "}
-                <span className="muted">attempt guesses were right</span>
-              </p>
-              <div
-                className="mt-2"
-                role="img"
-                aria-label={`Attempt guesses: ${r.easier} took fewer, ${r.right} as guessed, ${r.harder} took more`}
-              >
+            <>
+              <h3 className="mb-2 mt-5 text-sm font-bold">
+                Attempt guesses: {r.right} of {r.guessed} right
+              </h3>
+              <div role="img" aria-label={`Took fewer than guessed ${r.easier}, as guessed ${r.right}, took more ${r.harder}`}>
                 <Segments
-                  height={10}
-                  scale={r.guessed}
                   parts={[
-                    { value: r.easier, color: "var(--color-viz-blue)" },
-                    { value: r.right, color: "var(--color-viz-neutral)" },
-                    { value: r.harder, color: "var(--color-viz-orange)" },
+                    { value: r.easier, color: "#5FDDB0" },
+                    { value: r.right, color: "#1E1B3A" },
+                    { value: r.harder, color: "#FFA45C" },
                   ]}
                 />
               </div>
-              <Legend
-                items={[
-                  { color: "var(--color-viz-blue)", label: `Took fewer, ${r.easier}` },
-                  { color: "var(--color-viz-neutral)", label: `As guessed, ${r.right}` },
-                  { color: "var(--color-viz-orange)", label: `Took more, ${r.harder}` },
-                ]}
-              />
-              {verdict && <p className="muted mt-3">{verdict}</p>}
-            </div>
+              <ul className="muted mt-2 flex gap-3.5 text-[0.8125rem]">
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#5FDDB0" }} />Fewer {r.easier}</li>
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#1E1B3A" }} />As guessed {r.right}</li>
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#FFA45C" }} />More {r.harder}</li>
+              </ul>
+              {v && <p className="mt-3.5 rounded-[1.125rem] bg-wall px-3.5 py-3 text-sm leading-relaxed">{v}</p>}
+            </>
           )}
         </>
       )}

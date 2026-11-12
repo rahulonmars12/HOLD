@@ -1,90 +1,103 @@
 @import "tailwindcss";
 
 /*
- * Tickmark's palette comes from the bouldering gym: a dark navy mat, chalk,
- * the yellow tape of a start tag, and the colours of the holds themselves.
+ * HOLD! uses the "Soft volumes" look: a pale wall, white cards, navy ink,
+ * and pastel holds. Hold shapes (jug, crimp, sloper, pinch, pocket, volume)
+ * are the graphic motif; see components/Hold.tsx.
  */
 @theme {
-  --color-mat: #1a2230;
-  --color-mat-2: #222c3c;
-  --color-mat-3: #2e3a4e;
-  --color-mat-4: #46546b;
-  --color-chalk: #f3efe4;
-  --color-dust: #a7b0bd;
-  --color-tape: #f2c230;
-  --color-tape-ink: #1c1604;
-  --color-danger: #f0767c;
+  --color-wall: #eef2fb;
+  --color-card: #ffffff;
+  --color-ink: #1e1b3a;
+  --color-ink-2: #34305e;
+  --color-muted: #55526f;
+  --color-line: #c9d1e8;
+  --color-danger: #b3261e;
+  --color-danger-line: #e2a5a0;
 
-  /* Chart fills, checked for colour-blind separation on the mat-2 surface. */
-  --color-viz-amber: #b88820;
-  --color-viz-blue: #4f8fe0;
-  --color-viz-blue-light: #6fa8ee;
-  --color-viz-blue-deep: #3f78c8;
-  --color-viz-orange: #cf7026;
-  --color-viz-neutral: #5c6b84;
+  --color-sun: #ffdd55;
+  --color-sun-deep: #f5c92e;
+  --color-mint: #5fddb0;
+  --color-mint-deep: #3fc998;
+  --color-peri: #6e7cf0;
+  --color-sky: #7eb3ff;
+  --color-coral: #ffa45c;
+  --color-pink: #ff9cc2;
+  --color-lilac: #b79bff;
 
-  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Big Shoulders Variable", "Arial Narrow", ui-sans-serif,
-    sans-serif;
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Unbounded Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
-  color-scheme: dark;
-  background: var(--color-mat);
+  background: var(--color-wall);
   -webkit-text-size-adjust: 100%;
+  /* Corner holds bleed off the edge on purpose; never let them widen the page. */
+  overflow-x: clip;
 }
 
 body {
-  background: var(--color-mat);
-  color: var(--color-chalk);
+  background: var(--color-wall);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
+  overflow-x: clip;
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-tape);
+  outline: 3px solid var(--color-peri);
   outline-offset: 2px;
 }
 
 @layer components {
   .h-page {
     font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 2.125rem;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+  .h-card {
+    font-family: var(--font-display);
     font-weight: 700;
-    font-size: 2.25rem;
-    line-height: 1.05;
-    letter-spacing: 0.005em;
+    font-size: 1.125rem;
+    line-height: 1.2;
   }
-
-  .h-section {
+  .display {
     font-family: var(--font-display);
-    font-weight: 650;
-    font-size: 1.375rem;
-    line-height: 1.15;
-    letter-spacing: 0.01em;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  .muted {
+    color: var(--color-muted);
+  }
+  .card {
+    background: var(--color-card);
+    border-radius: 1.75rem;
+    padding: 1.125rem;
+  }
+  .label {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    padding-left: 0.25rem;
   }
 
-  .grade {
-    font-family: var(--font-display);
-    font-weight: 800;
-    line-height: 0.9;
-    letter-spacing: -0.01em;
-  }
-
+  /* Buttons */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     min-height: 3rem;
-    padding: 0 1.125rem;
-    border-radius: 0.75rem;
-    font-weight: 600;
+    padding: 0 1.25rem;
+    border-radius: 999px;
+    font-weight: 700;
     font-size: 1rem;
-    background: var(--color-mat-3);
-    color: var(--color-chalk);
-    transition: transform 80ms ease-out, background-color 120ms;
+    background: var(--color-card);
+    color: var(--color-ink);
+    transition: transform 80ms ease-out;
     touch-action: manipulation;
     user-select: none;
   }
@@ -94,73 +107,148 @@ body {
   .btn:disabled {
     opacity: 0.45;
   }
-  .btn-tape {
-    background: var(--color-tape);
-    color: var(--color-tape-ink);
+  .btn-ink {
+    background: var(--color-ink);
+    color: #fff;
   }
-  .btn-quiet {
+  .btn-soft {
+    background: var(--color-wall);
+  }
+  .btn-outline {
     background: transparent;
-    color: var(--color-dust);
-    font-weight: 500;
+    box-shadow: inset 0 0 0 2px var(--color-ink);
   }
   .btn-danger {
     background: transparent;
     color: var(--color-danger);
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-danger) 55%, transparent);
+    box-shadow: inset 0 0 0 2px var(--color-danger-line);
   }
-  .btn-xl {
-    min-height: 5.5rem;
-    border-radius: 1.125rem;
-    font-family: var(--font-display);
-    font-weight: 750;
-    font-size: 2rem;
-    letter-spacing: 0.01em;
+  .btn-quiet {
+    background: transparent;
   }
 
+  /* The one main action on a screen: a slowly drifting hold-colour gradient. */
+  .cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 4.125rem;
+    width: 100%;
+    padding: 0 0.5rem 0 1.625rem;
+    border-radius: 999px;
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.0625rem;
+    background: linear-gradient(100deg, #be123c, #c2410c, #be185d, #7c3aed, #1d4ed8, #047857, #1d4ed8, #7c3aed, #be123c);
+    background-size: 500% 100%;
+    animation: ctaflow 24s ease-in-out infinite alternate;
+    box-shadow: 0 6px 18px rgb(124 58 237 / 0.3);
+    transition: transform 80ms ease-out;
+    touch-action: manipulation;
+  }
+  .cta:active {
+    transform: scale(0.98);
+  }
+  .cta:disabled {
+    animation: none;
+    background: #8c8aa6;
+    box-shadow: none;
+  }
+  .cta-dot {
+    flex: none;
+    width: 3.125rem;
+    height: 3.125rem;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cta-center {
+    justify-content: center;
+    padding: 0 1.25rem;
+  }
+
+  /* Chips and segmented controls */
   .chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.75rem;
-    padding: 0 0.95rem;
+    min-height: 2.875rem;
+    padding: 0 1.125rem;
     border-radius: 999px;
-    background: var(--color-mat-2);
-    box-shadow: inset 0 0 0 1.5px var(--color-mat-3);
-    color: var(--color-chalk);
-    font-size: 0.95rem;
-    font-weight: 500;
+    background: var(--color-wall);
+    font-size: 0.9375rem;
+    font-weight: 600;
     touch-action: manipulation;
     user-select: none;
   }
   .chip[aria-pressed="true"] {
-    background: var(--color-chalk);
-    box-shadow: none;
-    color: var(--color-mat);
+    background: var(--color-ink);
+    color: #fff;
+    font-weight: 700;
+  }
+  .chip-white {
+    background: var(--color-card);
+  }
+  .segmented {
+    display: inline-flex;
+    padding: 4px;
+    background: var(--color-card);
+    border-radius: 999px;
+  }
+  .segmented > * {
+    min-height: 2.75rem;
+    padding: 0 1.125rem;
+    display: flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 0.9375rem;
     font-weight: 600;
+  }
+  .segmented > [aria-pressed="true"],
+  .segmented > [aria-current="page"] {
+    background: var(--color-ink);
+    color: #fff;
+    font-weight: 700;
   }
 
   .field {
     width: 100%;
-    min-height: 3rem;
-    padding: 0.7rem 0.9rem;
-    border-radius: 0.75rem;
-    background: var(--color-mat-2);
-    box-shadow: inset 0 0 0 1.5px var(--color-mat-3);
-    color: var(--color-chalk);
+    min-height: 3.25rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 1.625rem;
+    background: var(--color-wall);
+    color: var(--color-ink);
     font-size: 1rem;
   }
+  textarea.field {
+    border-radius: 1.375rem;
+    line-height: 1.45;
+    resize: none;
+  }
   .field::placeholder {
-    color: color-mix(in srgb, var(--color-dust) 70%, transparent);
+    color: #8c8aa6;
+  }
+  .field-white {
+    background: var(--color-card);
   }
 
-  .panel {
-    background: var(--color-mat-2);
-    border-radius: 1rem;
-    padding: 1rem;
+  .tile {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.75rem;
   }
+}
 
-  .muted {
-    color: var(--color-dust);
+@keyframes ctaflow {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
   }
 }
 
@@ -168,36 +256,129 @@ dialog.sheet {
   margin: auto auto 0;
   width: 100%;
   max-width: 28rem;
-  max-height: 90dvh;
+  max-height: 92dvh;
   overflow-y: auto;
   border: 0;
-  border-radius: 1.25rem 1.25rem 0 0;
-  padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
-  background: var(--color-mat-2);
-  color: var(--color-chalk);
+  border-radius: 2.25rem 2.25rem 0 0;
+  padding: 0.75rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  background: var(--color-card);
+  color: var(--color-ink);
 }
 dialog.sheet::backdrop {
-  background: rgb(8 12 18 / 0.7);
+  background: rgb(30 27 58 / 0.5);
 }
+
 @media (prefers-reduced-motion: no-preference) {
   dialog.sheet[open] {
-    animation: sheet-up 180ms ease-out;
+    animation: sheet-up 200ms ease-out;
   }
-  .tick-new {
-    animation: tick-in 220ms ease-out;
-    transform-origin: center bottom;
-    transform-box: fill-box;
+  .pop-in {
+    animation: pop-in 240ms ease-out;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta {
+    animation: none;
   }
 }
 @keyframes sheet-up {
   from {
-    transform: translateY(24px);
+    transform: translateY(28px);
     opacity: 0;
   }
 }
-@keyframes tick-in {
+@keyframes pop-in {
   from {
-    transform: scaleY(0.2);
+    transform: scale(0.4);
     opacity: 0;
   }
+}
+
+/* Hold-shaped progress markers on Insights */
+.mk {
+  display: inline-block;
+  flex: none;
+}
+.mk-jug {
+  width: 14px;
+  height: 14px;
+  clip-path: path("M1.05 6.3 C1.05 3.15 3.85 1.75 7 1.75 C10.15 1.75 12.95 3.15 12.95 6.3 C12.95 10.15 10.15 12.6 7 12.6 C3.85 12.6 1.05 10.15 1.05 6.3 Z");
+}
+.mk-flash {
+  background: radial-gradient(4.6px 1.5px at 50% 40%, #ffd43b 99%, transparent 100%),
+    radial-gradient(circle at 50% 70%, #ffd43b 0 1.4px, transparent 1.9px), #1e1b3a;
+}
+.mk-sent {
+  background: radial-gradient(4.6px 1.5px at 50% 40%, #c9a21e 99%, transparent 100%),
+    radial-gradient(circle at 50% 70%, #1e1b3a 0 1.3px, transparent 1.8px), #ffd43b;
+}
+.mk-open {
+  background: radial-gradient(4.6px 1.5px at 50% 40%, #b3b8c6 99%, transparent 100%),
+    radial-gradient(circle at 50% 70%, #8c91a3 0 1.3px, transparent 1.8px), #d3d7e1;
+}
+.mk-pocket {
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  vertical-align: -2px;
+  clip-path: path("M1.4 7 C1.4 3.5 4.2 1.4 7.35 1.4 C10.85 1.4 12.95 3.85 12.6 7.35 C12.25 10.85 9.8 12.6 7 12.6 C3.85 12.6 1.4 10.5 1.4 7 Z");
+}
+.bar-cap {
+  position: relative;
+}
+.bar-cap::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+}
+.cap-pinch::after {
+  clip-path: path("M10 1 C14 1 15.5 6 15 10 C14.5 15 13.5 19 10 19 C6.5 19 5.5 15 5 10 C4.5 6 6 1 10 1 Z");
+  background: linear-gradient(90deg, transparent 9.1px, #5fddb0 9.1px 10.9px, transparent 10.9px),
+    radial-gradient(circle at 50% 50%, #1e1b3a 0 1.8px, transparent 2.3px), #1e9d71;
+}
+.cap-sloper::after {
+  height: 18px;
+  clip-path: path("M1.5 17 C1.5 9 6 3.5 11 3.5 C16 3.5 19 9 18.5 17 Z");
+  background: radial-gradient(6px 5px at 56% 100%, #f58f40 99%, transparent 100%),
+    radial-gradient(circle at 56% 66%, #1e1b3a 0 1.6px, transparent 2.1px), #ffa45c;
+}
+.cap-pocket::after {
+  right: -11px;
+  width: 22px;
+  height: 22px;
+  clip-path: path("M2.2 11 C2.2 5.5 6.6 2.2 11.55 2.2 C17.05 2.2 20.35 6.05 19.8 11.55 C19.25 17.05 15.4 19.8 11 19.8 C6.05 19.8 2.2 16.5 2.2 11 Z");
+  background: radial-gradient(5px 3.3px at 45% 42%, #1e1b3a 99%, transparent 100%), #b79bff;
+}
+
+.grade-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  margin: 0;
+  outline-offset: 8px;
+}
+.grade-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  border: 6px solid var(--color-sun);
+  box-shadow: 0 2px 8px rgb(30 27 58 / 0.25);
+  cursor: pointer;
+}
+.grade-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  border: 6px solid var(--color-sun);
+  cursor: pointer;
 }
