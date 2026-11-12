@@ -129,8 +129,8 @@ export function Halo({ colors, size = 340, className = "" }: { colors: string[];
         marginLeft: -size / 2,
         marginTop: -size / 2,
         background: `conic-gradient(from 0deg, ${stops})`,
-        filter: "blur(30px)",
-        opacity: 0.95,
+        filter: "blur(26px) saturate(1.3)",
+        opacity: 0.8,
       }}
     />
   );
@@ -149,18 +149,18 @@ export function Burst({ color = "#FFFFFF", delay = 0 }: { color?: string; delay?
 
 /** Light pastel backgrounds that contrast with each rarity's rim. */
 export const RARITY_BG: Record<string, { base: string; colors: string[]; halo: string[] }> = {
-  bronze: { base: "#F1F8FF", colors: ["#A8E8D8", "#B4D2FF", "#C9F3E3", "#C4C2FF"], halo: ["#5FDDB0", "#7EB3FF", "#B79BFF"] },
-  silver: { base: "#FFF4F8", colors: ["#FFC2DB", "#DCCBFF", "#FFD4B5", "#FFB8D2"], halo: ["#FF9CC2", "#B79BFF", "#FFA45C"] },
-  gold: { base: "#F5F2FF", colors: ["#D3C6FF", "#BCD6FF", "#FFC9E1", "#C9CEFF"], halo: ["#B79BFF", "#7EB3FF", "#FF9CC2"] },
-  holo: { base: "#F8F6FF", colors: ["#FFC2DB", "#BCD6FF", "#BFF0DD", "#FFEA9C", "#DCCBFF"], halo: ["#FF9CC2", "#FFDD55", "#5FDDB0", "#7EB3FF", "#B79BFF"] },
+  bronze: { base: "#F1F8FF", colors: ["#A8E8D8", "#B4D2FF", "#C9F3E3", "#C4C2FF"], halo: ["#14D2B4", "#2F8BFF", "#7C5CFF"] },
+  silver: { base: "#FFF4F8", colors: ["#FFC2DB", "#DCCBFF", "#FFD4B5", "#FFB8D2"], halo: ["#FF3D9A", "#A64DFF", "#FF8A1F"] },
+  gold: { base: "#F5F2FF", colors: ["#D3C6FF", "#BCD6FF", "#FFC9E1", "#C9CEFF"], halo: ["#8B5CFF", "#2F8BFF", "#FF3D9A"] },
+  holo: { base: "#F8F6FF", colors: ["#FFC2DB", "#BCD6FF", "#BFF0DD", "#FFEA9C", "#DCCBFF"], halo: ["#FF3D9A", "#FFC400", "#14D2B4", "#2F8BFF", "#A64DFF"] },
 };
 
 /** Warm characters get cool pastels and the other way round. */
 const WARM = new Set(["monkey", "squirrel", "cat", "octopus", "goat"]);
 export function personaBg(id: string) {
   return WARM.has(id)
-    ? { base: "#F1F6FF", colors: ["#B4D2FF", "#A8E8D8", "#C4C2FF", "#BCE3FF"], halo: ["#7EB3FF", "#5FDDB0", "#B79BFF"] }
-    : { base: "#FFF5F7", colors: ["#FFC2DB", "#FFD4B5", "#DCCBFF", "#FFEA9C"], halo: ["#FF9CC2", "#FFA45C", "#B79BFF"] };
+    ? { base: "#F1F6FF", colors: ["#B4D2FF", "#A8E8D8", "#C4C2FF", "#BCE3FF"], halo: ["#2F8BFF", "#14D2B4", "#7C5CFF"] }
+    : { base: "#FFF5F7", colors: ["#FFC2DB", "#FFD4B5", "#DCCBFF", "#FFEA9C"], halo: ["#FF3D9A", "#FF8A1F", "#A64DFF"] };
 }
 
 /** The pastels an evolution builds up through. */

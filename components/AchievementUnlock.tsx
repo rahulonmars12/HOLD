@@ -66,7 +66,7 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
       <div className="relative mt-8">
         <Halo colors={RARITY_BG[def.rarity].halo} size={310} className={locked ? "" : "halo-fast"} />
         {locked && <Burst delay={0} />}
-        <div className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: "drop-shadow(0 18px 24px rgb(30 27 58 / 0.25))" }}>
+        <div className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: `drop-shadow(0 14px 22px ${RARITY_BG[def.rarity].halo[0]}66)` }}>
           <Badge id={id} size={250} assemble label={def.name} />
         </div>
       </div>
