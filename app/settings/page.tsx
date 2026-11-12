@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { PasswordForm, ProfileForm, SignIn, useProfile } from "@/components/Account";
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -210,7 +211,15 @@ export default function SettingsPage() {
       </section>
 
       <section id="demo" className="card mt-3 scroll-mt-6">
-        <h2 className="h-card">Demo data</h2>
+        <h2 className="h-card">Demo and animations</h2>
+        <p className="muted mt-2 text-sm leading-relaxed">
+          Watch every celebration on demand: achievement unlocks, persona evolutions, the send shower and all the
+          sounds.
+        </p>
+        <Link href="/lab" className="btn btn-ink mt-3 w-full">
+          Open the animation lab
+        </Link>
+        <h3 className="mt-5 text-[0.9375rem] font-bold">Demo data</h3>
         {auth ? (
           <p className="muted mt-2 text-sm leading-relaxed">
             Demo data isn&apos;t available while signed in, so it never mixes with your real log.

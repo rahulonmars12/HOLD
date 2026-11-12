@@ -7,7 +7,7 @@ import type { Hold as HoldKind } from "@/lib/types";
  * the crimp's edge, the pinch's ridge, the pocket's hole, the volume's
  * facet), and a bolt hole.
  */
-const SHAPES: Record<
+export const SHAPES: Record<
   HoldKind,
   { body: string; detail?: (shade: string) => React.ReactNode; bolt: [number, number] }
 > = {

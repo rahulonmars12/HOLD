@@ -4,6 +4,7 @@ import "@fontsource-variable/dm-sans";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { AchievementAgent } from "@/components/AchievementAgent";
 import { SfxAgent } from "@/components/SfxAgent";
 import { SyncAgent } from "@/components/SyncAgent";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
         <ServiceWorker />
         <SyncAgent />
         <SfxAgent />
+        <AchievementAgent />
       </body>
     </html>
   );

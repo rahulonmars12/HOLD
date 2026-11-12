@@ -49,6 +49,16 @@ three facts from your log and a growth tip. A full-screen reveal plays the
 first time and whenever it changes; buddies see each other's personas.
 The logic is in `lib/persona.ts`, the art in `public/personas/`.
 
+**Achievements.** 27 collectable pins in six groups (Firsts, Persistence,
+Habits, Style, Climbing IQ, Crew), each built from the app's hold shapes on a
+bronze, silver, gold or holographic coin. Earning one plays a full-screen
+unlock where the pieces fly in and snap together. The pin board lives under
+Insights. Rules are in `lib/achievements.ts`, the art in `components/Badge.tsx`.
+
+**Animation lab.** Settings, Demo and animations, Open the animation lab:
+play any achievement unlock, persona evolution, the send shower, Insights
+motion and every sound, without touching the log.
+
 **Sound and motion.** Small synthesised sounds for every tap (special ones
 for falls, sends, reasons, sheets, saving and tabs), haptics on Android, and
 light springy animations. Settings has a switch; Reduce Motion turns the

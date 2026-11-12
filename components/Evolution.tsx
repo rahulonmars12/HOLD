@@ -69,7 +69,7 @@ export function Evolution({ from, to, onDone }: { from: PersonaId | "new"; to: P
       role="dialog"
       aria-modal="true"
       aria-label={`You now climb like ${toInfo.article} ${toInfo.name}`}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-ink px-6 text-center text-white"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-ink px-6 text-center text-white"
     >
       <div
         aria-hidden

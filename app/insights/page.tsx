@@ -12,6 +12,8 @@ import { getMeta, setMeta } from "@/lib/db";
 import { percent, plural } from "@/lib/format";
 import { useData, type Data } from "@/lib/hooks";
 import { useCountUp } from "@/lib/useCountUp";
+import { Badge } from "@/components/Badge";
+import { ACHIEVEMENTS, progressAll } from "@/lib/achievements";
 import { PERSONAS, personaImage } from "@/lib/persona";
 import { usePersona, usePersonaReveal } from "@/lib/usePersona";
 import {
@@ -122,6 +124,7 @@ function InsightsView({ data }: { data: Data }) {
       </div>
 
       <PersonaCard data={data} />
+      <AchievementsCard data={data} />
 
       {sum.attempts === 0 ? (
         <p className="muted mt-6">No attempts in this time range. Try a longer one.</p>
@@ -540,6 +543,40 @@ function PersonaCard({ data }: { data: Data }) {
         </span>
       </span>
       <span className="relative mt-2 block text-[0.9375rem] font-medium leading-relaxed">{info.line}</span>
+    </Link>
+  );
+}
+
+function AchievementsCard({ data }: { data: Data }) {
+  const crew = useLiveQuery(async () => (await getMeta<string[]>("crewAch")) ?? [], []);
+  const progress = useMemo(() => progressAll(data.sessions, data.climbs, data.attempts, crew ?? []), [data, crew]);
+  const earned = ACHIEVEMENTS.filter((a) => progress[a.id]?.earned);
+  const next = ACHIEVEMENTS.filter((a) => !progress[a.id]?.earned && progress[a.id]?.need)
+    .sort((a, b) => (progress[b.id].have ?? 0) / progress[b.id].need! - (progress[a.id].have ?? 0) / progress[a.id].need!)[0];
+  return (
+    <Link href="/achievements" className="card relative mt-3 block">
+      <span className="flex items-baseline justify-between">
+        <span className="h-card">Achievements</span>
+        <span className="muted text-sm font-bold">
+          {earned.length} of {ACHIEVEMENTS.length}
+        </span>
+      </span>
+      <span className="mt-3 flex items-center gap-1">
+        {earned.length === 0 ? (
+          <span className="flex gap-1 opacity-70">
+            {["first-climb", "first-send", "first-flash"].map((id) => (
+              <Badge key={id} id={id} size={58} locked />
+            ))}
+          </span>
+        ) : (
+          earned.slice(-5).reverse().map((a) => <Badge key={a.id} id={a.id} size={58} />)
+        )}
+      </span>
+      {next && (
+        <span className="muted mt-2 block text-sm">
+          Next up: <strong className="text-ink">{next.name}</strong>, {progress[next.id].have} of {progress[next.id].need!.toLocaleString()}
+        </span>
+      )}
     </Link>
   );
 }

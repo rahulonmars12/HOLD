@@ -5,7 +5,7 @@
  * to download and they work offline. One switch in Settings turns both off.
  */
 
-export type Sound = "tap" | "fall" | "send" | "reason" | "sheet" | "save" | "nav" | "persona";
+export type Sound = "tap" | "fall" | "send" | "reason" | "sheet" | "save" | "nav" | "persona" | "achievement" | "clink";
 
 const KEY = "hold-sound";
 const VOLUME = 0.7;
@@ -94,6 +94,16 @@ const SOUNDS: Record<Sound, (c: AudioContext) => void> = {
   },
   send: (c) => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(c, f, i * 0.07, 0.4, "triangle", 0.13)),
   sheet: (c) => tone(c, 330, 0, 0.16, "sine", 0.06, 620),
+  achievement: (c) => {
+    [392, 523.25, 659.25, 783.99].forEach((f, i) => tone(c, f, i * 0.11, 0.3, "triangle", 0.12));
+    [523.25, 659.25, 783.99, 1046.5].forEach((f) => tone(c, f, 0.48, 1.1, "triangle", 0.06));
+    tone(c, 2093, 0.5, 0.6, "sine", 0.03);
+  },
+  clink: (c) => {
+    tone(c, 2637, 0, 0.35, "sine", 0.07);
+    tone(c, 3951, 0.005, 0.25, "sine", 0.04);
+    tone(c, 1760, 0, 0.12, "triangle", 0.05);
+  },
   persona: (c) => {
     [1046.5, 1318.5, 1568, 1760, 2093, 2637].forEach((f, i) => tone(c, f, i * 0.06, 0.5, "sine", 0.05));
     tone(c, 196, 0.1, 1.2, "triangle", 0.08, 392);
@@ -110,6 +120,8 @@ const HAPTICS: Partial<Record<Sound, number | number[]>> = {
   reason: 8,
   save: 10,
   persona: [10, 60, 10, 60, 30],
+  achievement: [20, 60, 40],
+  clink: 12,
 };
 
 export function sfx(name: Sound) {
@@ -140,6 +152,17 @@ export function evolveSound(step: number | "start") {
       return;
     }
     tone(c, 300 * Math.pow(1.06, step), 0, 0.09, "square", 0.025);
+  } catch {
+    // Decoration only.
+  }
+}
+
+/** A soft pop for each piece of a badge landing, a little higher each time. */
+export function pieceSound(i: number) {
+  if (!soundOn()) return;
+  try {
+    const c = audio();
+    if (c) tone(c, 520 * Math.pow(1.09, i), 0, 0.08, "sine", 0.08, 760 * Math.pow(1.09, i));
   } catch {
     // Decoration only.
   }

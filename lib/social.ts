@@ -285,3 +285,44 @@ export async function photoUrl(path: string): Promise<string | null> {
   signed.set(path, { url: data.signedUrl, until: Date.now() + 3500_000 });
   return data.signedUrl;
 }
+
+/* Crew achievements, which need buddies' data. */
+
+export async function crewAchievements(mine: Session[], sentProblemIds: string[]): Promise<string[]> {
+  const me = await uid();
+  const out: string[] = [];
+  const since = Date.now() - 365 * 86_400_000;
+  const { data: theirs } = await sb()
+    .from("sessions")
+    .select("gym_key, started_at, ended_at")
+    .neq("user_id", me)
+    .eq("deleted", false)
+    .gt("started_at", since)
+    .limit(2000);
+  const { overlapsBuddy } = await import("./achievements");
+  if (
+    theirs &&
+    overlapsBuddy(
+      mine,
+      (theirs as { gym_key: string; started_at: number | string; ended_at: number | string | null }[]).map((t) => ({
+        gym_key: t.gym_key,
+        started_at: Number(t.started_at),
+        ended_at: t.ended_at === null ? null : Number(t.ended_at),
+      })),
+    )
+  ) {
+    out.push("same-wall");
+  }
+  if (sentProblemIds.length) {
+    const { data: also } = await sb()
+      .from("climbs")
+      .select("id")
+      .neq("user_id", me)
+      .eq("deleted", false)
+      .eq("status", "sent")
+      .in("problem_id", sentProblemIds.slice(0, 200))
+      .limit(1);
+    if (also && also.length) out.push("send-train");
+  }
+  return out;
+}
