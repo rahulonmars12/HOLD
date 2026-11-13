@@ -10,6 +10,8 @@
   --color-card: #ffffff;
   --color-ink: #1e1b3a;
   --color-ink-2: #34305e;
+  /* Filled dark surfaces with white text: buttons, the active tab, dark cards. */
+  --color-inverse: #1e1b3a;
   --color-muted: #55526f;
   --color-line: #c9d1e8;
   --color-danger: #b3261e;
@@ -108,7 +110,7 @@ body {
     opacity: 0.45;
   }
   .btn-ink {
-    background: var(--color-ink);
+    background: var(--color-inverse);
     color: #fff;
   }
   .btn-soft {
@@ -186,7 +188,7 @@ body {
     user-select: none;
   }
   .chip[aria-pressed="true"] {
-    background: var(--color-ink);
+    background: var(--color-inverse);
     color: #fff;
     font-weight: 700;
   }
@@ -210,7 +212,7 @@ body {
   }
   .segmented > [aria-pressed="true"],
   .segmented > [aria-current="page"] {
-    background: var(--color-ink);
+    background: var(--color-inverse);
     color: #fff;
     font-weight: 700;
   }
@@ -838,7 +840,7 @@ dialog.sheet::backdrop {
 }
 
 .skeleton {
-  background: #ffffff;
+  background: var(--color-card);
   animation: skeleton 1.2s ease-in-out infinite;
 }
 
@@ -910,4 +912,122 @@ dialog.sheet::backdrop {
       transform: translateY(0);
     }
   }
+}
+
+/*
+ * Dark mode. The wall goes deep navy, cards lift off it, and text turns pale.
+ * Pastel holds and tiles keep their colours, so anything sitting on a pastel
+ * (or inside a celebration, marked .light) switches back to the light tokens.
+ */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-wall: #131129;
+  --color-card: #23204b;
+  --color-ink: #f1f0fa;
+  --color-ink-2: #5a54a8;
+  --color-inverse: #4d47a0;
+  --color-muted: #aaa7cc;
+  --color-line: #3d3970;
+  --color-danger: #ff8a80;
+  --color-danger-line: #7a3f4a;
+}
+html[data-theme="dark"] .bg-white {
+  background-color: var(--color-card);
+}
+html[data-theme="dark"] .bg-white\/75,
+html[data-theme="dark"] .bg-white\/80,
+html[data-theme="dark"] .bg-white\/85 {
+  background-color: color-mix(in srgb, var(--color-card) 80%, transparent);
+}
+html[data-theme="dark"] .bg-ink {
+  background-color: var(--color-inverse);
+}
+html[data-theme="dark"] dialog.sheet {
+  color: var(--color-ink);
+}
+html[data-theme="dark"] dialog.sheet::backdrop {
+  background: rgb(5 4 16 / 0.65);
+}
+html[data-theme="dark"] :is(.light, .on-color, .bg-sun, .bg-sun-deep, .bg-mint, .bg-mint-deep, .bg-pink, .bg-coral, .bg-sky, .bg-lilac, .cta-dot) {
+  --color-wall: #eef2fb;
+  --color-card: #ffffff;
+  --color-ink: #1e1b3a;
+  --color-ink-2: #34305e;
+  --color-inverse: #1e1b3a;
+  --color-muted: #55526f;
+  --color-line: #c9d1e8;
+  --color-danger: #b3261e;
+  --color-danger-line: #e2a5a0;
+  color: var(--color-ink);
+}
+
+/*
+ * Hold-like shapes. Panels and buttons have slightly uneven corners, like
+ * volumes and holds bolted to a wall. A few shapes rotate through lists so
+ * neighbours differ; circles (icon buttons, avatars) stay round.
+ */
+:root {
+  --shape-a: 2.1rem 1.4rem 1.9rem 1.2rem / 1.5rem 2rem 1.35rem 1.9rem;
+  --shape-b: 1.3rem 2.05rem 1.25rem 1.85rem / 1.95rem 1.4rem 2rem 1.3rem;
+  --shape-c: 1.8rem 1.55rem 1.2rem 2.05rem / 1.3rem 2rem 1.7rem 1.4rem;
+  --shape-sm-a: 1.6rem 1.05rem 1.45rem 0.95rem / 1.15rem 1.5rem 1rem 1.45rem;
+  --shape-sm-b: 1rem 1.55rem 0.95rem 1.4rem / 1.5rem 1.05rem 1.5rem 1rem;
+  --shape-sm-c: 1.4rem 1.2rem 0.9rem 1.6rem / 1rem 1.55rem 1.3rem 1.1rem;
+  --shape-btn-a: 1.9rem 1.45rem 1.8rem 1.25rem / 1.6rem 1.9rem 1.4rem 1.8rem;
+  --shape-btn-b: 1.35rem 1.9rem 1.3rem 1.75rem / 1.85rem 1.5rem 1.9rem 1.4rem;
+  --shape-cta: 2.3rem 1.7rem 2.15rem 1.5rem / 2rem 2.3rem 1.7rem 2.15rem;
+}
+.card,
+.tile,
+[class*="rounded-[1.75rem]"],
+[class*="rounded-[1.875rem]"],
+[class*="rounded-[1.625rem]"] {
+  border-radius: var(--shape-a);
+}
+:is(.card, .tile, [class*="rounded-[1.75rem]"], [class*="rounded-[1.875rem]"], [class*="rounded-[1.625rem]"]):nth-child(even),
+li:nth-child(even) > :is(.tile, [class*="rounded-[1.75rem]"]) {
+  border-radius: var(--shape-b);
+}
+:is(.card, .tile, [class*="rounded-[1.75rem]"], [class*="rounded-[1.875rem]"], [class*="rounded-[1.625rem]"]):nth-child(3n),
+li:nth-child(3n) > :is(.tile, [class*="rounded-[1.75rem]"]) {
+  border-radius: var(--shape-c);
+}
+[class*="rounded-[1.5rem]"],
+[class*="rounded-[1.375rem]"],
+[class*="rounded-[1.25rem]"],
+.reason {
+  border-radius: var(--shape-sm-a);
+}
+:is([class*="rounded-[1.5rem]"], [class*="rounded-[1.375rem]"], [class*="rounded-[1.25rem]"], .reason):nth-child(even),
+li:nth-child(even) > :is([class*="rounded-[1.5rem]"], [class*="rounded-[1.25rem]"]) {
+  border-radius: var(--shape-sm-b);
+}
+:is([class*="rounded-[1.5rem]"], [class*="rounded-[1.375rem]"], [class*="rounded-[1.25rem]"], .reason):nth-child(3n),
+li:nth-child(3n) > :is([class*="rounded-[1.5rem]"], [class*="rounded-[1.25rem]"]) {
+  border-radius: var(--shape-sm-c);
+}
+.btn,
+.chip,
+.field,
+.segmented {
+  border-radius: var(--shape-btn-a);
+}
+:is(.btn, .chip):nth-child(even) {
+  border-radius: var(--shape-btn-b);
+}
+textarea.field {
+  border-radius: var(--shape-sm-a);
+}
+.cta {
+  border-radius: var(--shape-cta);
+}
+.cta-dot {
+  color: #1e1b3a;
+  border-radius: 54% 46% 52% 48% / 47% 54% 46% 53%;
+}
+
+/* The big grade on a climb sits half on its hold, half on the wall. */
+html[data-theme="dark"] .hero-grade {
+  color: #f1f0fa;
+  text-shadow: 0 3px 0 rgb(19 17 41 / 0.45);
 }

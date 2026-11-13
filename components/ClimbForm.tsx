@@ -19,7 +19,7 @@ export function GradeSlider({ value, onChange }: { value: number; onChange: (g: 
           className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-wall"
           onClick={() => onChange(Math.max(0, value - 1))}
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="3" strokeLinecap="round" aria-hidden>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
             <path d="M4 10h12" />
           </svg>
         </button>
@@ -32,7 +32,7 @@ export function GradeSlider({ value, onChange }: { value: number; onChange: (g: 
           className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-wall"
           onClick={() => onChange(Math.min(MAX_GRADE, value + 1))}
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="3" strokeLinecap="round" aria-hidden>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden>
             <path d="M4 10h12M10 4v12" />
           </svg>
         </button>
@@ -48,7 +48,7 @@ export function GradeSlider({ value, onChange }: { value: number; onChange: (g: 
           value={value}
           aria-label="Grade"
           onChange={(e) => onChange(Number(e.target.value))}
-          style={{ background: `linear-gradient(90deg, #1E1B3A ${pct}%, #EEF2FB ${pct}%)` }}
+          style={{ background: `linear-gradient(90deg, var(--color-ink) ${pct}%, var(--color-wall) ${pct}%)` }}
         />
         <div aria-hidden className="muted mt-2.5 flex justify-between text-xs font-bold">
           {[0, 2, 4, 6, 8, 10, 12, 14].map((g) => (
@@ -86,7 +86,7 @@ export function ColorPicker({
         className="relative flex h-[2.875rem] w-[2.875rem] items-center justify-center rounded-full"
         style={{
           background: hex,
-          boxShadow: on ? "0 0 0 3px #FFFFFF, 0 0 0 6px #1E1B3A" : hex.toLowerCase() === "#ffffff" ? "inset 0 0 0 2px #C9D1E8" : undefined,
+          boxShadow: on ? "0 0 0 3px var(--color-card), 0 0 0 6px var(--color-ink)" : hex.toLowerCase() === "#ffffff" ? "inset 0 0 0 2px #C9D1E8" : undefined,
         }}
       >
         {on && (
@@ -96,7 +96,7 @@ export function ColorPicker({
         )}
         {star && (
           <span aria-hidden className="absolute -bottom-0.5 -right-0.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="#1E1B3A">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="#1E1B3A" className="text-[#1E1B3A]">
               <path d="M5 0.5l1.3 2.9 3.2 0.3-2.4 2.1 0.7 3.1L5 7.3 2.2 8.9l0.7-3.1L0.5 3.7l3.2-0.3z" />
             </svg>
           </span>
@@ -116,7 +116,7 @@ export function ColorPicker({
           className="flex h-[2.875rem] w-[2.875rem] items-center justify-center rounded-full bg-white shadow-[inset_0_0_0_2px_#8C8AA6]"
           onClick={() => picker.current?.click()}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#1E1B3A" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
             <path d="M9 3v12M3 9h12" />
           </svg>
         </button>
@@ -175,13 +175,13 @@ const ANGLE_ICONS: Record<Angle, { fill: string; line: string; hold: [number, nu
 
 export function AngleIcon({ angle, on = false, size = 36 }: { angle: Angle; on?: boolean; size?: number }) {
   const a = ANGLE_ICONS[angle];
-  const ink = on ? "#FFFFFF" : "#1E1B3A";
+  const ink = on ? "#FFFFFF" : "var(--color-ink)";
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d={a.fill} fill={on ? "#46426E" : "#C9D1E8"} />
+      <path d={a.fill} fill={on ? "#46426E" : "var(--color-line)"} />
       <path d={a.line} stroke={ink} strokeWidth="2.6" />
       <path d="M2 28 H30" stroke={ink} strokeWidth="2.6" />
-      <circle cx={a.hold[0]} cy={a.hold[1]} r="2.5" fill={on ? "#FFDD55" : "#1E1B3A"} />
+      <circle cx={a.hold[0]} cy={a.hold[1]} r="2.5" fill={on ? "#FFDD55" : "var(--color-ink)"} />
     </svg>
   );
 }
@@ -276,7 +276,7 @@ export function StyleIcon({ style, on = false }: { style: Style; on?: boolean })
   return (
     <span
       aria-hidden
-      className="flex h-10 w-10 items-center justify-center rounded-full"
+      className="flex h-10 w-10 items-center justify-center rounded-full text-[#1E1B3A]"
       style={{ background: on && style === "power" ? "#FFDD55" : "#FFFFFF" }}
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -352,7 +352,7 @@ function InfoTiles<T extends string>({
             onClick={() => setInfo(null)}
             className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#1E1B3A" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
               <path d="M3 3l8 8M11 3l-8 8" />
             </svg>
           </button>

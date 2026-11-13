@@ -47,7 +47,7 @@ export function MissionCard({ data, now, className = "" }: { data: Data; now: nu
     <section className={`relative flex items-center gap-3.5 rounded-[1.75rem] px-4 py-3.5 ${mission.done ? "bg-mint" : "bg-white"} ${className}`} aria-label="This week's mission">
       <span className="relative flex h-14 w-14 flex-none items-center justify-center">
         <svg width="56" height="56" viewBox="0 0 56 56" className="absolute inset-0 -rotate-90" aria-hidden>
-          <circle cx="28" cy="28" r={r} fill="none" stroke={mission.done ? "#FFFFFF" : "#EEF2FB"} strokeWidth="6" />
+          <circle cx="28" cy="28" r={r} fill="none" stroke={mission.done ? "#FFFFFF" : "var(--color-wall)"} strokeWidth="6" />
           <circle
             cx="28"
             cy="28"
@@ -62,7 +62,7 @@ export function MissionCard({ data, now, className = "" }: { data: Data; now: nu
           />
         </svg>
         {mission.done ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E1B3A" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" className="relative" aria-hidden>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" className="relative" aria-hidden>
             <path d="M5 12l5 5 9-10" />
           </svg>
         ) : (

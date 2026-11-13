@@ -20,11 +20,11 @@ export function GradeChip({ climb, size = 56 }: { climb: Pick<Climb, "grade" | "
   const dark = isDark(climb.color);
   return (
     <span
-      className="relative flex flex-none items-center justify-center overflow-hidden display"
+      className="on-color relative flex flex-none items-center justify-center overflow-hidden display"
       style={{
         width: size,
         height: size,
-        borderRadius: size * 0.32,
+        borderRadius: `${size * 0.4}px ${size * 0.26}px ${size * 0.36}px ${size * 0.22}px / ${size * 0.3}px ${size * 0.38}px ${size * 0.24}px ${size * 0.36}px`,
         background: holdHex(climb.color),
         color: dark ? "#FFFFFF" : "#1E1B3A",
         fontSize: size * 0.34,
@@ -49,7 +49,7 @@ export function ClimbTile({ climb, attempts }: { climb: Climb; attempts: Attempt
   return (
     <Link
       href={`/climb?id=${climb.id}`}
-      className="tile flex h-[9.25rem] flex-col p-4 active:scale-[0.98]"
+      className="on-color tile flex h-[9.25rem] flex-col p-4 active:scale-[0.98]"
       style={{
         background: holdHex(climb.color),
         color: dark ? "#FFFFFF" : "#1E1B3A",
@@ -94,7 +94,7 @@ export function ClimbRow({
   right?: React.ReactNode;
 }) {
   return (
-    <Link href={href} className="flex items-center gap-3.5 rounded-[1.5rem] bg-white py-2 pl-2 pr-4 active:bg-[#F6F8FD]">
+    <Link href={href} className="flex items-center gap-3.5 rounded-[1.5rem] bg-white py-2 pl-2 pr-4 active:opacity-80">
       <GradeChip climb={climb} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[0.9375rem] font-bold">{climb.name || describeClimb(climb)}</span>

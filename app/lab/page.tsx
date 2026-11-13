@@ -31,7 +31,7 @@ export default function LabPage() {
   return (
     <main className="pb-6">
       <Link href="/settings#demo" aria-label="Back to Settings" className="relative flex h-[2.875rem] w-[2.875rem] items-center justify-center rounded-full bg-white">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M12 4l-6 6 6 6" />
         </svg>
       </Link>
@@ -212,7 +212,7 @@ function LogDemo() {
             <button
               key={r.id}
               type="button"
-              className="chip min-h-14 justify-center text-[0.9375rem] font-bold"
+              className="on-color chip min-h-14 justify-center text-[0.9375rem] font-bold"
               style={{ background: r.color }}
               data-sfx="reason"
               onClick={() => setSheet(false)}

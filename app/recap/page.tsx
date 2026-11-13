@@ -135,7 +135,7 @@ function RecapScreen({ recap }: { recap: Recap }) {
   };
 
   return (
-    <main className="relative -mx-5 -mt-[calc(1.5rem+env(safe-area-inset-top))] min-h-dvh overflow-hidden px-5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
+    <main className="light relative -mx-5 -mt-[calc(1.5rem+env(safe-area-inset-top))] min-h-dvh overflow-hidden px-5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
       <Aurora colors={["#FFEA9C", "#DCCBFF", "#BCD6FF", "#FFD0E2", "#C4F2DF"]} particles />
       {recap.sends > 0 && <HoldRain />}
 
@@ -224,7 +224,7 @@ function RecapScreen({ recap }: { recap: Recap }) {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-b from-wall/0 via-wall/90 to-wall">
+      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-b from-[#EEF2FB]/0 via-[#EEF2FB]/90 to-[#EEF2FB]">
         <div className="mx-auto grid max-w-md grid-cols-[1fr_1.6fr] gap-3 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-6">
           <button type="button" className="btn min-h-16 bg-white text-base" onClick={share} disabled={shareState === "busy"} data-sfx="save">
             {shareState === "busy" ? "Making…" : shareState === "saved" ? "Saved" : shareState === "failed" ? "Try again" : "Share"}

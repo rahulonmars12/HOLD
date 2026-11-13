@@ -12,11 +12,11 @@ function Tick({ size, animate }: { size: number; animate?: boolean }) {
       className={animate ? "pop-in" : undefined}
       style={{ flex: "none" }}
     >
-      <circle cx="10" cy="10" r="10" fill="#1E1B3A" />
+      <circle cx="10" cy="10" r="10" fill="currentColor" />
       <path
         d="M5.5 10l3 3 6-6.5"
         fill="none"
-        stroke="#FFFFFF"
+        stroke="var(--color-card)"
         strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -36,7 +36,7 @@ function Ring({ size, dim, animate }: { size: number; dim?: boolean; animate?: b
       className={animate ? "pop-in" : undefined}
       style={{ flex: "none", opacity: dim ? 0.4 : 1 }}
     >
-      <circle cx="10" cy="10" r="7.6" fill="none" stroke="#1E1B3A" strokeWidth={size > 20 ? 2.4 : 2.6} />
+      <circle cx="10" cy="10" r="7.6" fill="none" stroke="currentColor" strokeWidth={size > 20 ? 2.4 : 2.6} />
     </svg>
   );
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 function Arrow({ plus }: { plus?: boolean }) {
   return (
     <span aria-hidden className="cta-dot">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1E1B3A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
         {plus ? <path d="M11 3v16M3 11h16" /> : <path d="M4 11h13M12 5l6 6-6 6" />}
       </svg>
     </span>

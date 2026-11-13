@@ -62,7 +62,7 @@ export function CheerButton({
         <path
           d="M12 2.5 L13.9 8.2 L19.8 6.2 L16.4 11.2 L21.5 14.5 L15.5 15 L16 21 L12 16.6 L8 21 L8.5 15 L2.5 14.5 L7.6 11.2 L4.2 6.2 L10.1 8.2 Z"
           fill={mine || (disabled && count > 0) ? "#F06C5B" : "none"}
-          stroke={mine || (disabled && count > 0) ? "#F06C5B" : "#1E1B3A"}
+          stroke={mine || (disabled && count > 0) ? "#F06C5B" : "currentColor"}
           strokeWidth="2"
           strokeLinejoin="round"
         />

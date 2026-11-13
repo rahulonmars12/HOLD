@@ -180,7 +180,7 @@ export default function LogPage() {
                 aria-pressed={status === s.id}
                 onClick={() => setStatus(s.id)}
                 className={`flex min-h-10 items-center gap-1 rounded-full px-3.5 text-sm ${
-                  status === s.id ? "bg-white font-bold shadow-[inset_0_0_0_2px_#1E1B3A]" : "font-semibold shadow-[inset_0_0_0_2px_#C9D1E8]"
+                  status === s.id ? "bg-white font-bold shadow-[inset_0_0_0_2px_var(--color-ink)]" : "font-semibold shadow-[inset_0_0_0_2px_var(--color-line)]"
                 }`}
               >
                 {s.label} <span className="muted">{counts[s.id]}</span>

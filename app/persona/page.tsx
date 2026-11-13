@@ -56,7 +56,7 @@ function Close() {
       aria-label="Close"
       className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top))] z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/80"
     >
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
         <path d="M5 5l10 10M15 5L5 15" />
       </svg>
     </Link>
@@ -87,7 +87,7 @@ function Reveal({ persona }: { persona: Persona }) {
   };
 
   return (
-    <section className="relative overflow-hidden pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]" style={{ background: info.tint }}>
+    <section className="light relative overflow-hidden pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]" style={{ background: info.tint }}>
       <Aurora colors={PERSONA_COLORS[persona.id]} base={info.tint} />
       <Close />
       <div className="relative flex flex-col items-center px-5 text-center">
@@ -178,11 +178,11 @@ function Catalog({ current }: { current?: PersonaId }) {
           return (
             <li
               key={id}
-              className={`flex flex-col rounded-[1.5rem] bg-white px-3.5 pb-4 pt-2 ${id === current ? "shadow-[inset_0_0_0_3px_#1E1B3A]" : ""}`}
+              className={`flex flex-col rounded-[1.5rem] bg-white px-3.5 pb-4 pt-2 ${id === current ? "shadow-[inset_0_0_0_3px_var(--color-ink)]" : ""}`}
             >
               <PersonaImg id={id} size={104} className="self-center" />
               <span className="display mt-1 text-base leading-tight">{p.name}</span>
-              <span className="mt-1 self-start rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: p.tint }}>
+              <span className="on-color mt-1 self-start rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: p.tint }}>
                 {p.tag}
               </span>
               <span className="muted mt-2 text-xs leading-relaxed">{p.rule}</span>

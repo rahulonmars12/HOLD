@@ -191,14 +191,14 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
       </div>
 
       <Link href="/" aria-label="Back to session" className="relative flex h-[2.875rem] w-[2.875rem] items-center justify-center rounded-full bg-white">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M12 4l-6 6 6 6" />
         </svg>
       </Link>
 
       <div className="relative mt-5 flex items-start justify-between gap-3 pl-3.5">
-        <div className="min-w-0">
-          <h1 className="display text-[6rem] leading-[0.95] tracking-[-0.04em]">{gradeLabel(climb.grade)}</h1>
+        <div className="on-color min-w-0 !bg-transparent">
+          <h1 className="hero-grade display text-[6rem] leading-[0.95] tracking-[-0.04em]">{gradeLabel(climb.grade)}</h1>
           <p className="display mt-2 text-lg font-bold">
             {climb.name || `${colorLabel(climb.color, custom)} ${labelOf(ANGLES, climb.angle).toLowerCase()}`}
           </p>
@@ -211,7 +211,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
       </div>
 
       <div className="relative mt-12 flex items-center justify-between gap-3">
-        <Tally attempts={attempts} size={26} fresh={fresh} animateLast={justLogged} pending={canLog} />
+        <span className="on-color"><Tally attempts={attempts} size={26} fresh={fresh} animateLast={justLogged} pending={canLog} /></span>
         {climb.status !== "sent" && (
           <p className="flex-none text-right text-[0.9375rem] font-bold leading-tight">
             {plural(stat.total, "attempt")}
@@ -251,7 +251,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
                       ? "#FFA45C"
                       : guess && stat.attemptsToSend! < guess.min
                         ? "#5FDDB0"
-                        : "#EEF2FB",
+                        : "var(--color-wall)",
                 }}
               >
                 <dt className="text-xs font-semibold">Took</dt>
@@ -396,7 +396,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
                 onClick={fell}
                 disabled={busy}
                 data-sfx="fall"
-                className="display flex h-[5.5rem] items-center justify-center rounded-full bg-white text-2xl shadow-[inset_0_0_0_2.5px_#1E1B3A] active:scale-[0.97]"
+                className="display flex h-[5.5rem] items-center justify-center rounded-full bg-white text-2xl shadow-[inset_0_0_0_2.5px_var(--color-ink)] active:scale-[0.97]"
               >
                 Fell
               </button>
@@ -489,7 +489,7 @@ function RestRing({ left, total }: { left: number; total: number }) {
       className="relative flex h-[3.75rem] w-[3.75rem] flex-none items-center justify-center rounded-full bg-white"
     >
       <svg width="60" height="60" viewBox="0 0 60 60" className="absolute inset-0 -rotate-90" aria-hidden>
-        <circle cx="30" cy="30" r={r} fill="none" stroke="#EEF2FB" strokeWidth="5" />
+        <circle cx="30" cy="30" r={r} fill="none" stroke="var(--color-wall)" strokeWidth="5" />
         <circle
           cx="30"
           cy="30"
@@ -531,7 +531,7 @@ function CalledIt({
     return () => clearTimeout(t);
   }, [verdict]);
   return (
-    <div className="-mt-1 rounded-[1.5rem] px-4 py-3.5" style={{ background: verdict === "right" ? "#FFDD55" : "#EEF2FB" }}>
+    <div className={`-mt-1 rounded-[1.5rem] px-4 py-3.5 ${verdict === "right" ? "bg-sun" : "bg-wall"}`}>
       <div className="flex items-center gap-3">
         {verdict === "right" && (
           <span className="stamp display flex-none rounded-[0.875rem] border-[3px] border-ink px-2.5 py-1 text-[0.9375rem] leading-none">
@@ -596,10 +596,10 @@ function ReasonSheet({ attemptId, stat, onClose }: { attemptId: string | null; s
                   await setAttemptReason(attempt.id, attempt.reason === r.id ? undefined : r.id);
                   onClose();
                 }}
-                className="flex min-h-[4.125rem] items-center justify-center rounded-full text-[1.0625rem] font-bold"
+                className="on-color reason flex min-h-[4.125rem] items-center justify-center text-[1.0625rem] font-bold"
                 style={{
                   background: r.color,
-                  boxShadow: attempt.reason === r.id ? "0 0 0 3px #FFFFFF, 0 0 0 5.5px #1E1B3A" : undefined,
+                  boxShadow: attempt.reason === r.id ? "0 0 0 3px var(--color-card), 0 0 0 5.5px var(--color-ink)" : undefined,
                 }}
               >
                 {r.label}

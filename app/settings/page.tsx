@@ -11,6 +11,7 @@ import { plural, timeLabel } from "@/lib/format";
 import { useCustomColors, useData } from "@/lib/hooks";
 import { supabase, usernameOf } from "@/lib/supabase";
 import { setSoundOn, sfx, soundOn, subscribeSound } from "@/lib/sfx";
+import { setTheme, useTheme } from "@/lib/theme";
 import { REST_CHOICES, setRestSeconds, useRestSetting } from "@/lib/rest";
 import { syncNow, useSyncStatus } from "@/lib/sync";
 
@@ -182,6 +183,7 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <ThemeCard />
       <SoundCard />
       <RestCard />
 
@@ -291,6 +293,31 @@ export default function SettingsPage() {
         </section>
       )}
     </main>
+  );
+}
+
+function ThemeCard() {
+  const theme = useTheme();
+  return (
+    <section className="card mt-3">
+      <h2 className="h-card" id="theme-label">
+        Appearance
+      </h2>
+      <div role="radiogroup" aria-labelledby="theme-label" className="mt-3 grid grid-cols-3 gap-2">
+        {(["system", "light", "dark"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="radio"
+            aria-checked={theme === t}
+            className={`btn min-h-12 px-2 text-sm ${theme === t ? "btn-ink" : "btn-soft"}`}
+            onClick={() => setTheme(t)}
+          >
+            {t === "system" ? "Match phone" : t === "light" ? "Light" : "Dark"}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

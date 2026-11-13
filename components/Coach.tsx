@@ -122,7 +122,7 @@ export function CoachCard({
             disabled={busy || !question.trim()}
             className="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-sun disabled:opacity-60"
           >
-            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#1E1B3A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M4 11h13M12 5l6 6-6 6" />
             </svg>
           </button>

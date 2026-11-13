@@ -463,14 +463,14 @@ function RouteReading({ reading: r }: { reading: Reading }) {
               <div role="img" aria-label={`Beta held: yes ${r.counts.yes}, partly ${r.counts.partly}, no ${r.counts.no}`} className="mt-4">
                 <Segments
                   parts={[
-                    { value: r.counts.yes, color: "#1E1B3A" },
+                    { value: r.counts.yes, color: "var(--color-ink)" },
                     { value: r.counts.partly, color: "#6E7CF0" },
                     { value: r.counts.no, color: "#D9DEEE" },
                   ]}
                 />
               </div>
               <ul className="muted mt-2 flex gap-3.5 text-[0.8125rem]">
-                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#1E1B3A" }} />Held {r.counts.yes}</li>
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "var(--color-ink)" }} />Held {r.counts.yes}</li>
                 <li><span aria-hidden className="mk mk-pocket" style={{ background: "#6E7CF0" }} />Partly {r.counts.partly}</li>
                 <li><span aria-hidden className="mk mk-pocket" style={{ background: "#D9DEEE" }} />Didn&apos;t {r.counts.no}</li>
               </ul>
@@ -485,14 +485,14 @@ function RouteReading({ reading: r }: { reading: Reading }) {
                 <Segments
                   parts={[
                     { value: r.easier, color: "#5FDDB0" },
-                    { value: r.right, color: "#1E1B3A" },
+                    { value: r.right, color: "var(--color-ink)" },
                     { value: r.harder, color: "#FFA45C" },
                   ]}
                 />
               </div>
               <ul className="muted mt-2 flex gap-3.5 text-[0.8125rem]">
                 <li><span aria-hidden className="mk mk-pocket" style={{ background: "#5FDDB0" }} />Fewer {r.easier}</li>
-                <li><span aria-hidden className="mk mk-pocket" style={{ background: "#1E1B3A" }} />As guessed {r.right}</li>
+                <li><span aria-hidden className="mk mk-pocket" style={{ background: "var(--color-ink)" }} />As guessed {r.right}</li>
                 <li><span aria-hidden className="mk mk-pocket" style={{ background: "#FFA45C" }} />More {r.harder}</li>
               </ul>
               {v && <p className="mt-3.5 rounded-[1.125rem] bg-wall px-3.5 py-3 text-sm leading-relaxed">{v}</p>}
@@ -525,7 +525,7 @@ function PersonaCard({ data }: { data: Data }) {
   const info = PERSONAS[result.persona.id];
   const dash = PERSONAS[result.persona.dash];
   return (
-    <Link href="/persona" className="relative mt-4 block overflow-hidden rounded-[1.875rem] px-4 pb-4 pt-3" style={{ background: info.tint }}>
+    <Link href="/persona" className="on-color relative mt-4 block overflow-hidden rounded-[1.875rem] px-4 pb-4 pt-3" style={{ background: info.tint }}>
       <Aurora colors={PERSONA_COLORS[info.id]} base={info.tint} />
       <span className="relative flex items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}

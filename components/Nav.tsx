@@ -90,7 +90,7 @@ export function Nav() {
                     active ? "bg-ink text-white" : ""
                   }`}
                 >
-                  {tab.icon(active ? "#FFFFFF" : "#1E1B3A", active ? "#1E1B3A" : "#FFFFFF")}
+                  {tab.icon(active ? "#FFFFFF" : "var(--color-ink)", active ? "var(--color-inverse)" : "var(--color-card)")}
                   {active && tab.label}
                 </Link>
               </li>

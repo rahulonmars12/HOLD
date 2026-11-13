@@ -62,7 +62,7 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
       role="dialog"
       aria-modal="true"
       aria-label={`Achievement unlocked: ${def.name}`}
-      className="fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-wall px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-ink"
+      className="light fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-wall px-6 pt-[calc(4rem+env(safe-area-inset-top))] text-center text-ink"
     >
       <Aurora colors={RARITY_BG[def.rarity].colors} base={RARITY_BG[def.rarity].base} rainbow={def.rarity === "holo"} particles />
       <p className="relative flex h-9 items-center rounded-full bg-white/75 px-4 text-sm font-bold backdrop-blur">Achievement unlocked</p>

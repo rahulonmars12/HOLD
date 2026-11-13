@@ -5,6 +5,7 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { AchievementAgent } from "@/components/AchievementAgent";
+import { THEME_SCRIPT } from "@/lib/theme";
 import { CrewAgent } from "@/components/CrewAgent";
 import { SfxAgent } from "@/components/SfxAgent";
 import { SyncAgent } from "@/components/SyncAgent";
@@ -28,7 +29,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#EEF2FB",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#EEF2FB" },
+    { media: "(prefers-color-scheme: dark)", color: "#131129" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -40,7 +44,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-full overflow-x-clip">
         <div className="relative mx-auto w-full max-w-md px-5 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           {children}

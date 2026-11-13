@@ -8,6 +8,7 @@ import { describeClimb, GradeChip } from "@/components/ClimbCards";
 import { Hold } from "@/components/Hold";
 import { Loading } from "@/components/Loading";
 import { ACHIEVEMENTS, byId } from "@/lib/achievements";
+import { demoCrew, isDemoId } from "@/lib/demo-crew";
 import { dayLabel, plural } from "@/lib/format";
 import { PERSONAS, PERSONA_COLORS, personaImage, type PersonaId } from "@/lib/persona";
 import { buddyProfile, nameOf, type BuddyProfile } from "@/lib/social";
@@ -23,8 +24,17 @@ export default function BuddyPage() {
   const [state, setState] = useState<{ id: string; profile: BuddyProfile | null; error?: string } | null>(null);
 
   useEffect(() => {
-    if (!auth || !id) return;
+    if (!id) return;
     let alive = true;
+    if (isDemoId(id)) {
+      // A made-up buddy from the demo data: no account needed.
+      const t = setTimeout(() => alive && setState({ id, profile: demoCrew(Date.now()).buddies.find((b) => b.who.id === id) ?? null }), 0);
+      return () => {
+        alive = false;
+        clearTimeout(t);
+      };
+    }
+    if (!auth) return;
     buddyProfile(id)
       .then((profile) => alive && setState({ id, profile }))
       .catch((e) => alive && setState({ id, profile: null, error: e instanceof Error ? e.message : "Couldn't load this buddy." }));
@@ -35,14 +45,15 @@ export default function BuddyPage() {
 
   const back = (
     <Link href="/buddies" aria-label="Back to Buddies" className="relative z-10 flex h-[2.875rem] w-[2.875rem] items-center justify-center rounded-full bg-white">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M12 4l-6 6 6 6" />
       </svg>
     </Link>
   );
 
-  if (search === null || auth === undefined) return <Loading />;
-  if (!auth || !id) {
+  const demo = isDemoId(id);
+  if (search === null || (auth === undefined && !demo)) return <Loading />;
+  if ((!auth && !demo) || !id) {
     return (
       <main className="pb-6">
         {back}
@@ -71,8 +82,8 @@ export default function BuddyPage() {
   return (
     <main className="pb-6">
       <section
-        className="relative -mx-5 -mt-[calc(1.5rem+env(safe-area-inset-top))] overflow-hidden px-5 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]"
-        style={{ background: persona?.tint ?? "#FFFFFF" }}
+        className={`relative -mx-5 -mt-[calc(1.5rem+env(safe-area-inset-top))] overflow-hidden px-5 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] ${persona ? "light" : ""}`}
+        style={{ background: persona?.tint ?? "var(--color-card)" }}
       >
         {persona && <Aurora colors={PERSONA_COLORS[persona.id]} base={persona.tint} />}
         {back}

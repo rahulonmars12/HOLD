@@ -164,7 +164,7 @@ export default function NewClimbPage() {
     <main className="pb-36">
       <CornerHold kind="sloper" fill="#FFA45C" shade="#F58F40" rotate={-14} size={220} right={-60} top={-58} />
       <Link href="/" aria-label="Back to session" className="relative flex h-[2.875rem] w-[2.875rem] items-center justify-center rounded-full bg-white">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1E1B3A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M12 4l-6 6 6 6" />
         </svg>
       </Link>
@@ -189,14 +189,14 @@ export default function NewClimbPage() {
         <button
           type="button"
           onClick={() => fileInput.current?.click()}
-          className="relative flex h-[6.5rem] w-[6.5rem] flex-none flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[1.5rem] bg-wall text-[0.8125rem] font-bold shadow-[inset_0_0_0_2px_#C9D1E8]"
+          className="relative flex h-[6.5rem] w-[6.5rem] flex-none flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[1.5rem] bg-wall text-[0.8125rem] font-bold shadow-[inset_0_0_0_2px_var(--color-line)]"
         >
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photoUrl} alt="Climb photo" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E1B3A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
                 <circle cx="12" cy="13" r="3.5" />
               </svg>

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { earnedIds, progressAll } from "@/lib/achievements";
 import { colorLabel, gradeLabel, gymKey } from "@/lib/constants";
 import { getMeta, setMeta } from "@/lib/db";
+import { DEMO_NUDGES, isDemoLog } from "@/lib/demo-crew";
 import { useData } from "@/lib/hooks";
 import { sfx } from "@/lib/sfx";
 import { nudgesSince, publishEvent, publishPins, type Nudge } from "@/lib/social";
@@ -89,6 +90,22 @@ export function CrewAgent() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, projectKey, activeGym]);
+
+  // With the demo data and no account, a made-up buddy drops by once per visit.
+  const demo = !uid && !!data && isDemoLog(data.sessions);
+  useEffect(() => {
+    if (!demo) return;
+    let n = 0;
+    try {
+      n = Number(sessionStorage.getItem("hold-demo-nudge") ?? 0);
+      if (n >= DEMO_NUDGES.length) return;
+      sessionStorage.setItem("hold-demo-nudge", String(n + 1));
+    } catch {
+      return;
+    }
+    const t = setTimeout(() => setQueue((q) => [...q, DEMO_NUDGES[n]]), 5000);
+    return () => clearTimeout(t);
+  }, [demo]);
 
   const current = queue[0];
   const currentId = current?.id;

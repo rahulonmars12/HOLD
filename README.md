@@ -92,6 +92,14 @@ board and top sends. While the app is open a small banner tells you when a buddy
 cheers you, sends one of your open projects or starts climbing at your gym.
 Needs `supabase/migrations/0005_crew.sql`.
 
+**Dark mode.** Settings, Appearance: Match phone, Light or Dark. Colours are
+tokens in `app/globals.css`; anything sitting on a pastel, and the full-screen
+celebrations, stay light on purpose (`.on-color`, `.light`).
+
+**Demo crew.** Loading the demo data (signed out) also fills the Buddies tab
+with four made-up buddies, a feed, cheers, buddy pages and a banner, from
+`lib/demo-crew.ts`. Nothing is sent anywhere.
+
 **First run.** A short onboarding: what HOLD! does, making an account (or
 skipping to keep the log on the phone), and the first session.
 

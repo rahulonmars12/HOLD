@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ProfileForm, SignIn, useProfile } from "@/components/Account";
 import Link from "next/link";
 import { FeedRow, PersonaFace } from "@/components/Crew";
 import { CornerHold, Hold } from "@/components/Hold";
+import { demoCrew, isDemoLog } from "@/lib/demo-crew";
 import { duration } from "@/lib/format";
 import { useData, useNow } from "@/lib/hooks";
 import { PERSONAS, type PersonaId } from "@/lib/persona";
@@ -28,6 +29,8 @@ import { cloudEnabled } from "@/lib/supabase";
 
 export default function BuddiesPage() {
   const { auth, profile, reload } = useProfile();
+  const data = useData();
+  const demo = !!data && isDemoLog(data.sessions);
 
   return (
     <main>
@@ -38,6 +41,8 @@ export default function BuddiesPage() {
       </p>
 
       {auth === undefined || (auth && profile === undefined) ? null : !auth ? (
+        <>
+        {demo && <DemoFeed />}
         <section className="card mt-6">
           <h2 className="h-card mb-3">Sign in to climb with buddies</h2>
           <SignIn
@@ -48,6 +53,7 @@ export default function BuddiesPage() {
             }
           />
         </section>
+        </>
       ) : !profile?.username ? (
         <section className="card mt-6">
           <h2 className="h-card mb-1">Pick a username</h2>
@@ -288,6 +294,70 @@ function Feed({ username }: { username: string }) {
           </ul>
         </section>
       )}
+    </>
+  );
+}
+
+/** The make-believe crew that comes with the demo data. */
+function DemoFeed() {
+  const now = useNow();
+  const data = useData();
+  const mine = usePersona(data);
+  const mySends = useMemo(
+    () => (data?.climbs ?? []).filter((c) => c.status === "sent").sort((a, b) => (b.sentAt ?? 0) - (a.sentAt ?? 0)),
+    [data],
+  );
+  const crew = useMemo(() => demoCrew(now, mySends), [now, mySends]);
+  const [flipped, setFlipped] = useState<Set<string>>(new Set());
+  return (
+    <>
+      <p className="relative mt-5 rounded-[1.25rem] bg-sun px-4 py-3 text-sm font-semibold leading-snug">
+        Demo crew. Maya, Tom, Linh and Kai are made up so you can try cheers and buddy pages. Nothing is sent anywhere.
+      </p>
+      <Crew me={mine?.ready ? mine.persona.id : undefined} buddies={crew.buddies.map((b) => ({ id: b.who.id, name: nameOf(b.who), persona: b.persona }))} />
+      <section className="mt-6">
+        <div className="flex items-center gap-2.5">
+          <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-mint-deep" />
+          <h2 className="h-card">Climbing now</h2>
+        </div>
+        <ul className="mt-3 flex flex-col gap-2">
+          {crew.live.map((l) => (
+            <li key={l.who.id} className="flex items-center gap-3.5 rounded-[1.5rem] bg-white py-3 pl-3 pr-5">
+              <PersonaFace id={l.persona} size={52} />
+              <Link href={`/buddy?u=${l.who.id}`} className="min-w-0 flex-1">
+                <span className="block font-bold">{nameOf(l.who)}</span>
+                <span className="muted block truncate text-sm">
+                  {l.gym}, {duration(now - l.startedAt)} in
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="mt-7">
+        <h2 className="h-card">Crew feed</h2>
+        <p className="muted mt-1 text-sm">Tap the star to cheer a buddy on.</p>
+        <ul className="mt-3 flex flex-col gap-2">
+          {crew.feed.map((item) => {
+            const on = flipped.has(item.key) ? !item.cheers.mine : item.cheers.mine;
+            const shown = { ...item, cheers: { ...item.cheers, mine: on, count: item.cheers.count + (on === item.cheers.mine ? 0 : on ? 1 : -1) } };
+            return (
+              <FeedRow
+                key={item.key}
+                item={shown}
+                onCheer={() =>
+                  setFlipped((f) => {
+                    const next = new Set(f);
+                    if (next.has(item.key)) next.delete(item.key);
+                    else next.add(item.key);
+                    return next;
+                  })
+                }
+              />
+            );
+          })}
+        </ul>
+      </section>
     </>
   );
 }
