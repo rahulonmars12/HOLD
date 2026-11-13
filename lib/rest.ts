@@ -4,11 +4,11 @@ import { useSyncExternalStore } from "react";
 import { sfx } from "./sfx";
 
 /**
- * The rest timer that starts after a fall. It lives outside any screen so it
+ * The optional rest timer you start with a tap. It lives outside any screen so it
  * keeps counting while you move around the app, and chimes once when done.
  */
 const KEY = "hold-rest";
-export const REST_CHOICES = [0, 60, 120, 180] as const;
+export const REST_CHOICES = [60, 120, 180] as const;
 const DEFAULT = 120;
 
 export interface Rest {
@@ -34,7 +34,7 @@ export function restSeconds(): number {
   try {
     const raw = localStorage.getItem(KEY);
     const n = raw === null ? DEFAULT : Number(raw);
-    return Number.isFinite(n) && n >= 0 ? n : DEFAULT;
+    return Number.isFinite(n) && n > 0 ? n : DEFAULT;
   } catch {
     return DEFAULT;
   }

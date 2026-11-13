@@ -5,13 +5,16 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ClimbRow, ClimbTile } from "@/components/ClimbCards";
+import { GradeChip, describeClimb } from "@/components/ClimbCards";
+import { OnClimb, SessionClock } from "@/components/OnClimb";
+import { FallCount } from "@/components/Tally";
+import { setCurrentClimb, useCurrentClimb } from "@/lib/current";
 import { Cta } from "@/components/Cta";
 import { CornerHold } from "@/components/Hold";
 import { Sheet } from "@/components/Sheet";
 import { gradeLabel, gymKey } from "@/lib/constants";
 import { addClimb, db, endSession, getMeta, logAttempt, startSession } from "@/lib/db";
-import { dayLabel, duration, plural } from "@/lib/format";
+import { dayLabel, plural } from "@/lib/format";
 import { useData, useNow, type Data } from "@/lib/hooks";
 import { climbingNow, nameOf, type LiveSession } from "@/lib/social";
 import { climbStats, sessionStats } from "@/lib/stats";
@@ -53,36 +56,67 @@ export default function SessionPage() {
   return <StartSession data={data} />;
 }
 
-function GymForm({ gyms, label, cta }: { gyms: string[]; label: string; cta: string }) {
-  const [gym, setGym] = useState<string | null>(null);
-  const value = gym ?? gyms[0] ?? "";
+/** Pick a gym and go: recent gyms as chips, or type a new one. Pinned above the tab bar. */
+function StartCard({ gyms, picked, onPick }: { gyms: string[]; picked: string; onPick: (gym: string) => void }) {
+  const [typing, setTyping] = useState(gyms.length === 0);
+  const value = picked.trim();
   return (
     <form
+      className="card shadow-[0_8px_24px_rgb(30_27_58/0.14)]"
       onSubmit={(e) => {
         e.preventDefault();
-        void startSession(value);
-        setGym(null);
+        if (value) void startSession(value);
       }}
     >
-      <label htmlFor="gym" className="label">
-        {label}
-      </label>
-      <input
-        id="gym"
-        className="field field-white mt-2"
-        placeholder="Gym name"
-        list="gyms"
-        autoComplete="off"
-        value={value}
-        onChange={(e) => setGym(e.target.value)}
-      />
-      <datalist id="gyms">
-        {gyms.map((g) => (
-          <option key={g} value={g} />
-        ))}
-      </datalist>
-      <Cta type="submit" className="mt-3">
-        {cta}
+      <h2 className="h-card" id="where">
+        Where today?
+      </h2>
+      {gyms.length > 0 && (
+        <div role="group" aria-labelledby="where" className="mt-3 flex flex-wrap gap-2">
+          {gyms.slice(0, 3).map((g) => (
+            <button
+              key={g}
+              type="button"
+              className="chip max-w-full"
+              aria-pressed={!typing && gymKey(g) === gymKey(picked)}
+              onClick={() => {
+                setTyping(false);
+                onPick(g);
+              }}
+            >
+              <span className="truncate">{g}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={typing}
+            onClick={() => {
+              setTyping(true);
+              onPick("");
+            }}
+          >
+            Other gym
+          </button>
+        </div>
+      )}
+      {typing && (
+        <>
+          <label htmlFor="gym" className="sr-only">
+            Gym name
+          </label>
+          <input
+            id="gym"
+            className="field mt-3"
+            placeholder="Gym name"
+            autoComplete="off"
+            value={picked}
+            onChange={(e) => onPick(e.target.value)}
+          />
+        </>
+      )}
+      <Cta type="submit" className="mt-3" disabled={!value}>
+        Start session
       </Cta>
     </form>
   );
@@ -125,15 +159,19 @@ function StartSession({ data }: { data: Data }) {
     .filter((s) => s.climb.status === "project")
     .sort((a, b) => (b.lastAt ?? b.climb.createdAt) - (a.lastAt ?? a.climb.createdAt));
   const last = sessionStats(data.sessions, data.climbs, data.attempts)[0];
-  const lastTop = last?.topSend ?? null;
   const now = useNow();
   const day = Math.floor(now / 86_400_000);
   const persona = usePersona(data);
   usePersonaReveal(persona);
   const personaId = persona?.ready ? persona.persona.id : undefined;
+  const [gym, setGym] = useState<string | null>(null);
+  const picked = gym ?? gyms[0] ?? "";
+  // The closest projects at the gym you're about to climb at: fewest falls first.
+  const here = projects.filter((p) => picked && gymKey(p.climb.gym) === gymKey(picked));
+  const waiting = (here.length > 0 ? here : projects).slice().sort((a, b) => a.total - b.total || (b.lastAt ?? 0) - (a.lastAt ?? 0));
 
   return (
-    <main>
+    <main className="pb-[19rem]">
       <CornerHold kind="jug" fill="#FFDD55" shade="#E8BE2A" />
       <p className="muted relative text-[0.9375rem] font-semibold">
         {greeting(new Date(now), personaId ? PERSONAS[personaId].name : undefined)}{" "}
@@ -148,57 +186,40 @@ function StartSession({ data }: { data: Data }) {
         })}
         className="relative mt-4"
       />
-
-      <div className="card relative mt-5">
-        <GymForm gyms={gyms} label="Where are you climbing?" cta="Start session" />
-      </div>
       <BuddiesNow />
-      <MissionCard data={data} now={now} className="mt-4" />
 
-      {last && (
-        <section className="mt-7">
-          <h2 className="h-card">Last session</h2>
-          <Link href="/log" className="mt-3 flex items-center gap-3.5 rounded-[1.75rem] bg-white py-4 pl-5 pr-4">
-            <span className="min-w-0 flex-1">
-              <span className="block font-bold">
-                {dayLabel(last.session.startedAt)} at {last.session.gym}
-              </span>
-              <span className="muted mt-1 block text-[0.9375rem]">
-                {plural(last.climbs, "climb")}, {plural(last.attempts, "attempt")}, {plural(last.sends, "send")}
-              </span>
-            </span>
-            {lastTop !== null && (
-              <span className="flex h-16 w-16 flex-none flex-col items-center justify-center rounded-full bg-sun">
-                <span className="display text-xl leading-none">{gradeLabel(lastTop)}</span>
-                <span className="text-[0.6875rem] font-bold">top send</span>
-              </span>
-            )}
-          </Link>
-        </section>
-      )}
-
-      {projects.length > 0 && (
-        <section className="mt-7">
-          <div className="flex items-center gap-2.5">
-            <h2 className="h-card">Open projects</h2>
-            <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-ink px-2 text-sm font-bold text-white">
-              {projects.length}
-            </span>
+      {waiting.length > 0 && (
+        <section className="mt-6">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="h-card">Waiting for you</h2>
+            <Link href="/log" className="flex-none text-sm font-bold underline underline-offset-4">
+              All {projects.length} in Log
+            </Link>
           </div>
-          <p className="muted mt-1 text-[0.9375rem]">Unsent climbs carry over until you send or retire them.</p>
-          <ul className="mt-3 flex flex-col gap-2.5">
-            {projects.map((s) => (
+          <p className="muted mt-1 text-sm">
+            {here.length > 0 ? `Your closest projects at ${picked}.` : "Your closest projects."}
+          </p>
+          <ul className="mt-3 grid grid-cols-3 gap-2.5">
+            {waiting.slice(0, 3).map((s) => (
               <li key={s.climb.id}>
-                <ClimbRow
-                  climb={s.climb}
-                  attempts={s.attempts}
-                  note={`${s.climb.gym}, last tried ${dayLabel(s.lastAt ?? s.climb.createdAt).toLowerCase()}`}
-                />
+                <Link href={`/climb?id=${s.climb.id}`} className="flex h-full flex-col gap-2 rounded-[1.5rem] bg-white p-3">
+                  <GradeChip climb={s.climb} size={44} />
+                  <span className="line-clamp-2 text-[0.8125rem] font-bold leading-tight">
+                    {s.climb.name || describeClimb(s.climb).split(",").slice(0, 2).join(",")}
+                  </span>
+                  <span className="muted mt-auto text-xs">{plural(s.total, "fall")}</span>
+                </Link>
               </li>
             ))}
           </ul>
         </section>
       )}
+
+      <div className="fixed inset-x-0 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-10 px-5">
+        <div className="mx-auto max-w-md">
+          <StartCard gyms={gyms} picked={picked} onPick={setGym} />
+        </div>
+      </div>
     </main>
   );
 }
@@ -239,43 +260,69 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
     ...sends.map((a) => data.climbs.find((c) => c.id === a.climbId)?.grade ?? -1),
   );
 
+  const currentId = useCurrentClimb();
+  const onWall = stats.find((x) => x.climb.id === currentId && x.climb.status === "project");
+  const [picking, setPicking] = useState(false);
+  const lastMine = mine[mine.length - 1];
+
   return (
-    <main>
+    <main className="pb-[13.5rem]">
+      {onWall && <OnClimb stat={onWall} session={session} persona={personaId} />}
       <CornerHold kind="jug" fill="#FFDD55" shade="#E8BE2A" />
-      <p className="muted relative flex items-center gap-2 text-[0.9375rem] font-semibold">
-        <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-mint-deep" />
-        Session, {duration(now - session.startedAt)} in
+      <p className="muted relative flex max-w-[15rem] items-center gap-2 text-[0.9375rem] font-semibold">
+        <span aria-hidden className="h-2.5 w-2.5 flex-none rounded-full bg-mint-deep" />
+        <span className="truncate">{session.gym}</span>
       </p>
-      <h1 className={`h-page relative mt-1.5 max-w-[15rem] [overflow-wrap:anywhere] ${session.gym.length > 14 ? "!text-[1.625rem] !leading-tight" : ""}`}>{session.gym}</h1>
+      <h1 className="display relative mt-1 text-[3.375rem] leading-none tracking-[-0.03em] tabular-nums">
+        <SessionClock since={session.startedAt} />
+      </h1>
       <ul className="relative mt-4 flex flex-wrap gap-2 text-[0.9375rem] font-semibold">
         <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(touched.size, "climb")}</li>
-        <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(mine.length, "attempt")}</li>
-        <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(sends.length, "send")}</li>
+        <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(mine.length, "go", "goes")}</li>
+        <li className={`flex h-[2.375rem] items-center rounded-full px-3.5 ${sends.length > 0 ? "bg-mint" : "bg-white"}`}>{plural(sends.length, "send")}</li>
       </ul>
       <Companion
         persona={personaId}
-        mood={sends.length > 0 && mine[mine.length - 1]?.result === "send" ? "ready" : "idle"}
+        mood={lastMine?.result === "send" ? "ready" : "idle"}
         line={sessionLine(mine.length, { climbs: touched.size, sends: sends.length, falls: mine.length - sends.length })}
         className="relative mt-4"
       />
       <BuddiesNow gym={session.gym} />
-
-      <Cta href="/new" plus className="relative mt-4">
-        Add a climb
-      </Cta>
-      <button type="button" className="btn mt-2.5 w-full bg-white" onClick={() => setWarming(true)}>
-        Quick warm-up
-      </button>
       <MissionCard data={data} now={now} className="mt-4" />
 
       {current.length > 0 ? (
-        <section className="mt-7">
+        <section className="mt-6">
           <h2 className="h-card">This session</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {current.map((s) => (
-              <ClimbTile key={s.climb.id} climb={s.climb} attempts={s.attempts.filter((a) => a.sessionId === session.id)} />
-            ))}
-          </div>
+          <ul className="mt-3 flex flex-col gap-2">
+            {current.map((s) => {
+              const open = s.climb.status === "project";
+              const here = s.attempts.filter((a) => a.sessionId === session.id);
+              const row = (
+                <>
+                  <GradeChip climb={s.climb} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[0.9375rem] font-bold">{s.climb.name || describeClimb(s.climb)}</span>
+                    {open && <span className="muted block truncate text-[0.8125rem]">{here.length === 0 ? "Not tried yet. Tap to start" : "Moved on. Tap to go again"}</span>}
+                  </span>
+                  {s.flash ? <span className="text-sm font-bold">Flashed</span> : here.length > 0 && <FallCount attempts={here} />}
+                </>
+              );
+              const cls = "flex w-full items-center gap-3.5 rounded-[1.5rem] bg-white py-2 pl-2 pr-4 text-left active:opacity-80";
+              return (
+                <li key={s.climb.id}>
+                  {open ? (
+                    <button type="button" className={cls} onClick={() => setCurrentClimb(s.climb.id)}>
+                      {row}
+                    </button>
+                  ) : (
+                    <Link href={`/climb?id=${s.climb.id}`} className={cls}>
+                      {row}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </section>
       ) : (
         <p className="muted mt-6 text-[0.9375rem] leading-relaxed">
@@ -283,27 +330,52 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
         </p>
       )}
 
-      {waiting.length > 0 && (
-        <section className="mt-7">
-          <h2 className="h-card">Open projects here</h2>
-          <p className="muted mt-1 text-[0.9375rem]">From earlier sessions at this gym.</p>
-          <ul className="mt-3 flex flex-col gap-2.5">
-            {waiting.map((s) => (
-              <li key={s.climb.id}>
-                <ClimbRow
-                  climb={s.climb}
-                  attempts={s.attempts}
-                  note={`Last tried ${dayLabel(s.lastAt ?? s.climb.createdAt).toLowerCase()}`}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <button type="button" className="btn btn-outline mt-6 w-full" onClick={() => setEnding(true)}>
+      <button type="button" className="btn btn-outline mt-5 w-full" onClick={() => setEnding(true)}>
         End session
       </button>
+
+      <div className="fixed inset-x-0 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-10 bg-gradient-to-b from-wall/0 via-wall via-[30%] to-wall px-5 pt-6">
+        <div className="mx-auto max-w-md">
+          <div className={`grid gap-2.5 ${waiting.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
+            <button type="button" className="btn min-h-[3.125rem] bg-white" onClick={() => setWarming(true)}>
+              Quick warm-up
+            </button>
+            {waiting.length > 0 && (
+              <button type="button" className="btn min-h-[3.125rem] bg-white" onClick={() => setPicking(true)}>
+                Old projects ({waiting.length})
+              </button>
+            )}
+          </div>
+          <Cta href="/new" plus className="mt-2.5">
+            Add a climb
+          </Cta>
+        </div>
+      </div>
+
+      <Sheet open={picking} onClose={() => setPicking(false)} title="Old projects here">
+        <p className="muted -mt-2 text-[0.9375rem]">Unsent climbs from earlier sessions at this gym. Tap one to get back on it.</p>
+        <ul className="mt-4 flex flex-col gap-2">
+          {waiting.map((s) => (
+            <li key={s.climb.id}>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3.5 rounded-[1.5rem] bg-wall py-2 pl-2 pr-4 text-left"
+                onClick={() => {
+                  setPicking(false);
+                  setCurrentClimb(s.climb.id);
+                }}
+              >
+                <GradeChip climb={s.climb} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[0.9375rem] font-bold">{s.climb.name || describeClimb(s.climb)}</span>
+                  <span className="muted block truncate text-[0.8125rem]">Last tried {dayLabel(s.lastAt ?? s.climb.createdAt).toLowerCase()}</span>
+                </span>
+                <FallCount attempts={s.attempts} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Sheet>
 
       <Sheet open={warming} onClose={() => setWarming(false)} title="Quick warm-up">
         <p className="muted -mt-2 text-[0.9375rem]">Tap a grade to log a flash. No tags, no fuss.</p>

@@ -14,19 +14,18 @@ import { useData } from "@/lib/hooks";
 import { climbStats, sessionStats } from "@/lib/stats";
 import Link from "next/link";
 
-type View = "sessions" | "climbs";
+type View = "projects" | "sessions" | "climbs";
 type Status = "project" | "sent" | "retired";
 
 const STATUSES: { id: Status; label: string }[] = [
-  { id: "project", label: "Open" },
   { id: "sent", label: "Sent" },
   { id: "retired", label: "Retired" },
 ];
 
 export default function LogPage() {
   const data = useData();
-  const [view, setView] = useState<View>("sessions");
-  const [status, setStatus] = useState<Status>("project");
+  const [view, setView] = useState<View>("projects");
+  const [status, setStatus] = useState<Status>("sent");
   const [openId, setOpenId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
@@ -59,6 +58,9 @@ export default function LogPage() {
       <CornerHold kind="pinch" fill="#5FDDB0" shade="#3FC998" rotate={38} size={240} right={-70} top={-90} />
       <h1 className="h-page relative">Log</h1>
       <div role="group" aria-label="View" className="segmented relative mt-4">
+        <button type="button" aria-pressed={view === "projects"} onClick={() => setView("projects")}>
+          Projects
+        </button>
         <button type="button" aria-pressed={view === "sessions"} onClick={() => setView("sessions")}>
           Sessions
         </button>
@@ -66,6 +68,8 @@ export default function LogPage() {
           Climbs
         </button>
       </div>
+
+      {view === "projects" && <Projects stats={stats} last={sessions.find((x) => x.session.endedAt !== undefined)} />}
 
       {view === "sessions" &&
         (sessions.length === 0 ? (
@@ -218,5 +222,59 @@ export default function LogPage() {
         </>
       )}
     </main>
+  );
+}
+
+/** Every unsent climb, grouped by gym, plus a way back to the last session's recap. */
+function Projects({ stats, last }: { stats: ReturnType<typeof climbStats>; last?: ReturnType<typeof sessionStats>[number] }) {
+  const open = stats
+    .filter((s) => s.climb.status === "project")
+    .sort((a, b) => (b.lastAt ?? b.climb.createdAt) - (a.lastAt ?? a.climb.createdAt));
+  const gyms = [...new Set(open.map((s) => s.climb.gym))];
+  return (
+    <>
+      {open.length === 0 ? (
+        <p className="muted mt-6">No open projects. Anything you try and don&apos;t send waits here until you send or retire it.</p>
+      ) : (
+        <p className="muted mt-4 text-[0.9375rem]">
+          {plural(open.length, "unsent climb")}. They carry over until you send or retire them.
+        </p>
+      )}
+      {gyms.map((gym) => (
+        <section key={gym} className="mt-5">
+          <h2 className="h-card text-base">{gym}</h2>
+          <ul className="mt-2.5 flex flex-col gap-2">
+            {open
+              .filter((s) => s.climb.gym === gym)
+              .map((s) => (
+                <li key={s.climb.id}>
+                  <ClimbRow climb={s.climb} attempts={s.attempts} note={`Last tried ${dayLabel(s.lastAt ?? s.climb.createdAt).toLowerCase()}`} />
+                </li>
+              ))}
+          </ul>
+        </section>
+      ))}
+      {last && (
+        <section className="mt-7">
+          <h2 className="h-card text-base">Last session</h2>
+          <Link href={`/recap?s=${last.session.id}`} className="mt-2.5 flex items-center gap-3.5 rounded-[1.75rem] bg-white py-4 pl-5 pr-4">
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold">
+                {dayLabel(last.session.startedAt)} at {last.session.gym}
+              </span>
+              <span className="muted mt-1 block text-[0.9375rem]">
+                {plural(last.climbs, "climb")}, {plural(last.attempts, "go", "goes")}, {plural(last.sends, "send")}. Open the recap
+              </span>
+            </span>
+            {last.topSend !== null && (
+              <span className="flex h-14 w-14 flex-none flex-col items-center justify-center rounded-full bg-sun">
+                <span className="display text-lg leading-none">{gradeLabel(last.topSend)}</span>
+                <span className="text-[0.625rem] font-bold">top send</span>
+              </span>
+            )}
+          </Link>
+        </section>
+      )}
+    </>
   );
 }

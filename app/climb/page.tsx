@@ -58,7 +58,9 @@ export default function ClimbPage() {
 }
 
 function ClimbLoader() {
-  const id = useSearchParams().get("id");
+  const params = useSearchParams();
+  const id = params.get("id");
+  const fromSend = params.get("sent") === "1";
   const data = useData();
   const stat = useMemo(() => {
     if (!data || !id) return undefined;
@@ -80,10 +82,10 @@ function ClimbLoader() {
     );
   }
   // Keyed so sheets and drafts reset when moving between climbs.
-  return <ClimbScreen key={stat.climb.id} data={data} stat={stat} />;
+  return <ClimbScreen key={stat.climb.id} data={data} stat={stat} fromSend={fromSend} />;
 }
 
-function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
+function ClimbScreen({ data, stat, fromSend }: { data: Data; stat: ClimbStat; fromSend: boolean }) {
   const router = useRouter();
   const custom = useCustomColors();
   const { climb, attempts } = stat;
@@ -97,6 +99,26 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
   const [justLogged, setJustLogged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [rain, setRain] = useState(0);
+
+  // Sent from the full-screen session view: celebrate here, ask about the read, then go back.
+  const celebrate = fromSend && stat.sent;
+  useEffect(() => {
+    if (!celebrate) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t0 = setTimeout(() => {
+      setJustLogged(true);
+      setRain((n) => n + 1);
+    }, 0);
+    const t1 = setTimeout(() => setReviewing(true), calm ? 0 : 1100);
+    return () => {
+      clearTimeout(t0);
+      clearTimeout(t1);
+    };
+  }, [celebrate]);
+  const closeReview = () => {
+    setReviewing(false);
+    if (fromSend) router.replace("/");
+  };
 
   const fresh = active ? new Set(attempts.filter((a) => a.sessionId === active.id).map((a) => a.id)) : undefined;
   const guess = GUESSES.find((g) => g.id === climb.guess);
@@ -136,7 +158,6 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
     const attempt = await logAttempt(climb.id, active.id, "fall");
     setJustLogged(true);
     setLabelling(attempt.id);
-    startRest(climb.id);
     setBusy(false);
   };
 
@@ -382,7 +403,15 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
           {showCompanion && (
             <div className="mb-3 flex items-center gap-2">
               <Companion persona={persona} mood={mood} size={60} line={line} className="min-w-0 flex-1" />
-              {resting && !resting.done && <RestRing left={resting.left} total={resting.total} />}
+              {resting && !resting.done ? (
+                <RestRing left={resting.left} total={resting.total} />
+              ) : (
+                canLog && (
+                  <button type="button" className="btn min-h-12 flex-none px-3.5 text-sm" onClick={() => startRest(climb.id)}>
+                    Rest
+                  </button>
+                )
+              )}
             </div>
           )}
           {climb.status === "sent" || climb.status === "retired" ? (
@@ -414,7 +443,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
 
       <Sheet
         open={reviewing}
-        onClose={() => setReviewing(false)}
+        onClose={closeReview}
         title={stat.flash ? "Flashed it" : `Sent on attempt ${stat.attemptsToSend ?? stat.total}`}
         aside={
           <span aria-hidden className="relative -mr-1 -mt-2 flex-none">
@@ -467,7 +496,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
           className="mt-4"
           onClick={async () => {
             await saveRead(climb.id, read, whatWorked);
-            setReviewing(false);
+            closeReview();
           }}
         >
           Save

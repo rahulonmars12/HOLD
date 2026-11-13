@@ -73,8 +73,15 @@ top send, what was worth remembering, new pins, and a teaser if your persona is
 about to evolve. Share makes a picture card on the phone (`lib/share.ts`);
 pins and personas can be shared the same way.
 
-**Rest timer.** Starts after each fall (Off, 1, 2 or 3 minutes in Settings),
-shown as a ring next to the companion; tap it to skip. Chimes when you're rested.
+**Session flow.** The Session tab is only about doing. Start: pick a gym
+(pinned above the tab bar) and go. On a climb: that climb fills the screen with
+three choices, Fell, Sent and Let's move on (`components/OnClimb.tsx`; the
+climb in play is kept in `lib/current.ts`). Between climbs: a live timer, this
+session's climbs, and Add a climb under your thumb. Open projects and the last
+session live in Log, under Projects.
+
+**Rest timer.** Optional: tap Rest on a climb to start a countdown (1, 2 or 3
+minutes in Settings). It chimes when you're rested and never starts by itself.
 
 **Quick logging.** "Quick warm-up" on the session screen logs a flash in two
 taps. "Same again" on Add a climb copies the tags of your last climb.

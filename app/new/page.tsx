@@ -10,6 +10,7 @@ import { Cta } from "@/components/Cta";
 import { CornerHold, Hold } from "@/components/Hold";
 import { GUESSES } from "@/lib/constants";
 import { shrinkPhoto, tagsFromPhoto } from "@/lib/ai";
+import { setCurrentClimb } from "@/lib/current";
 import { addClimb, newId, savePhoto, updateClimb } from "@/lib/db";
 import { useCustomColors, useData } from "@/lib/hooks";
 import { createProblem, gymProblems, type Problem } from "@/lib/social";
@@ -157,7 +158,9 @@ export default function NewClimbPage() {
     setForm(blank);
     setPhoto(null);
     setSaving(false);
-    router.replace(`/climb?id=${climb.id}`);
+    // Straight onto the wall: the Session tab shows this climb full screen.
+    setCurrentClimb(climb.id);
+    router.replace("/");
   };
 
   return (

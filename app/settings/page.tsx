@@ -329,9 +329,9 @@ function RestCard() {
         Rest timer
       </h2>
       <p className="muted mt-1 text-sm leading-relaxed">
-        Starts after each fall and chimes when you&apos;re rested. Tap the ring on a climb to skip it.
+        Tap Rest on a climb to start a countdown. It chimes when you&apos;re rested, and never starts by itself.
       </p>
-      <div role="radiogroup" aria-labelledby="rest-label" className="mt-3 grid grid-cols-4 gap-2">
+      <div role="radiogroup" aria-labelledby="rest-label" className="mt-3 grid grid-cols-3 gap-2">
         {REST_CHOICES.map((n) => (
           <button
             key={n}
@@ -341,7 +341,7 @@ function RestCard() {
             className={`btn min-h-12 px-2 text-sm ${seconds === n ? "btn-ink" : "btn-soft"}`}
             onClick={() => setRestSeconds(n)}
           >
-            {n === 0 ? "Off" : `${n / 60} min`}
+            {`${n / 60} min`}
           </button>
         ))}
       </div>
