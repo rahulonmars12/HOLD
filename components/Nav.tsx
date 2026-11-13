@@ -3,23 +3,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+const TABS: { href: string; label: string; icon: (c: string, on: string) => React.ReactNode }[] = [
   {
     href: "/",
     label: "Session",
-    icon: (c: string) => (
-      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke={c} strokeWidth="2.2" aria-hidden>
-        <circle cx="6" cy="10" r="3.5" />
-        <circle cx="14" cy="10" r="3.5" fill={c} />
+    // A jug hold with its bolt: "climb".
+    icon: (c: string, on: string) => (
+      <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden>
+        <path d="M3 18 C3 9 11 5 20 5 C29 5 37 9 37 18 C37 29 29 36 20 36 C11 36 3 29 3 18 Z" fill={c} />
+        <path d="M10 15 C14 11 26 11 30 15" fill="none" stroke={on} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="20" cy="26" r="3" fill={on} />
       </svg>
     ),
   },
   {
     href: "/log",
     label: "Log",
+    // A logbook page with ticks.
     icon: (c: string) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round" aria-hidden>
-        <path d="M5 6h14M5 12h14M5 18h9" />
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <rect x="4.5" y="3.5" width="15" height="17" rx="3.5" />
+        <path d="M8.5 9l1.6 1.6L13 7.8M8.5 15l1.6 1.6L13 13.8M15.5 9.5h.5M15.5 15.5h.5" />
       </svg>
     ),
   },
@@ -27,7 +31,7 @@ const TABS = [
     href: "/buddies",
     label: "Buddies",
     icon: (c: string) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" aria-hidden>
         <circle cx="9" cy="8" r="3.2" />
         <path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5" />
         <circle cx="17" cy="9" r="2.5" />
@@ -38,27 +42,28 @@ const TABS = [
   {
     href: "/insights",
     label: "Insights",
+    // A bar chart.
     icon: (c: string) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round" aria-hidden>
-        <path d="M9 5h6M6.5 12h11M4 19h16" />
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="3.4" strokeLinecap="round" aria-hidden>
+        <path d="M6 19v-5M12 19V6M18 19v-9" />
       </svg>
     ),
   },
   {
     href: "/settings",
     label: "Settings",
+    // A gear.
     icon: (c: string) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round" aria-hidden>
-        <path d="M4 8h9M17 8h3M4 16h3M11 16h9" />
-        <circle cx="15" cy="8" r="2" />
-        <circle cx="9" cy="16" r="2" />
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <circle cx="12" cy="12" r="3.2" />
+        <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8" />
       </svg>
     ),
   },
 ];
 
 /** Screens used mid-attempt hide the tabs so nothing competes with logging. */
-const FOCUS_ROUTES = ["/climb", "/new", "/welcome", "/persona"];
+const FOCUS_ROUTES = ["/climb", "/new", "/welcome", "/persona", "/recap"];
 
 export function Nav() {
   const pathname = usePathname();
@@ -85,7 +90,7 @@ export function Nav() {
                     active ? "bg-ink text-white" : ""
                   }`}
                 >
-                  {tab.icon(active ? "#FFFFFF" : "#1E1B3A")}
+                  {tab.icon(active ? "#FFFFFF" : "#1E1B3A", active ? "#1E1B3A" : "#FFFFFF")}
                   {active && tab.label}
                 </Link>
               </li>

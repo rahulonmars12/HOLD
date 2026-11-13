@@ -405,6 +405,32 @@ dialog.sheet::backdrop {
   .burst {
     animation: burst 900ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
   }
+  .comp-idle {
+    animation: bob 3.2s ease-in-out infinite;
+  }
+  .comp-fall {
+    animation: comp-fall 700ms ease-out both;
+  }
+  .comp-send {
+    animation: comp-send 1100ms cubic-bezier(0.3, 1.3, 0.5, 1) both;
+  }
+  .comp-rest {
+    animation: comp-rest 3.6s ease-in-out infinite;
+    transform-origin: 50% 90%;
+  }
+  .comp-ready {
+    animation: comp-ready 600ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  }
+  .comp-zz {
+    animation: comp-zz 2.4s ease-in-out infinite;
+  }
+  .bubble {
+    animation: pop-in 320ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
+    transform-origin: left center;
+  }
+  .bubble-left {
+    transform-origin: right center;
+  }
   .hold-rain-piece {
     position: absolute;
     top: -48px;
@@ -596,6 +622,82 @@ dialog.sheet::backdrop {
     opacity: 0;
   }
 }
+@keyframes skeleton {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes comp-fall {
+  0% {
+    transform: translateY(-14px) rotate(0);
+  }
+  35% {
+    transform: translateY(6px) rotate(-14deg) scale(1.08, 0.88);
+  }
+  55% {
+    transform: translateY(0) rotate(10deg);
+  }
+  75% {
+    transform: rotate(-6deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes comp-send {
+  0% {
+    transform: none;
+  }
+  25% {
+    transform: translateY(-26px) rotate(-12deg) scale(1.1);
+  }
+  50% {
+    transform: translateY(0) rotate(0) scale(0.95, 1.05);
+  }
+  70% {
+    transform: translateY(-14px) rotate(10deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes comp-rest {
+  0%,
+  100% {
+    transform: rotate(-4deg) scale(1, 1);
+  }
+  50% {
+    transform: rotate(-4deg) scale(1.03, 0.96);
+  }
+}
+@keyframes comp-ready {
+  0% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-12px) scale(1.06);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes comp-zz {
+  0% {
+    transform: translate(0, 4px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(6px, -10px);
+    opacity: 0;
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -733,4 +835,48 @@ dialog.sheet::backdrop {
   background: var(--color-ink);
   border: 6px solid var(--color-sun);
   cursor: pointer;
+}
+
+.skeleton {
+  background: #ffffff;
+  animation: skeleton 1.2s ease-in-out infinite;
+}
+
+/* Speech bubble tail */
+.bubble::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+  border-radius: 3px;
+}
+.bubble-right::before {
+  left: -5px;
+}
+.bubble-left::before {
+  right: -5px;
+}
+
+/* "Called it!" stamp. */
+.stamp {
+  transform: rotate(-6deg);
+  background: #ffffff;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stamp {
+    animation: stamp 520ms 200ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  }
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: rotate(-18deg) scale(2.2);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(-6deg) scale(1);
+    }
+  }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Loading } from "@/components/Loading";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useMemo, useState } from "react";
 import { AngleIcon, holdColorsFor } from "@/components/ClimbForm";
@@ -46,7 +47,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 export default function InsightsPage() {
   const data = useData();
-  if (!data) return null;
+  if (!data) return <Loading />;
   if (data.attempts.length === 0) return <Empty />;
   return <InsightsView data={data} />;
 }

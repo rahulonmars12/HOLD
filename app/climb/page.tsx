@@ -1,10 +1,12 @@
 "use client";
 
+import { Loading } from "@/components/Loading";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { describeClimb, mainHold } from "@/components/ClimbCards";
 import { CoachCard } from "@/components/Coach";
+import { Companion, type Mood } from "@/components/Companion";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { Cta } from "@/components/Cta";
 import { HoldRain } from "@/components/HoldRain";
@@ -38,6 +40,10 @@ import {
 } from "@/lib/db";
 import { dayLabel, plural, timeLabel } from "@/lib/format";
 import { useCustomColors, useData, usePhoto, type Data } from "@/lib/hooks";
+import { clock, startRest, stopRest, useRest } from "@/lib/rest";
+import { sfx } from "@/lib/sfx";
+import { usePersona } from "@/lib/usePersona";
+import { fallLine, firstGoLine, guessLine, readyLine, returnLine, sendLine } from "@/lib/voice";
 import { nameOf, problemResults, retireProblem, type ProblemResult } from "@/lib/social";
 import { climbStats, type ClimbStat } from "@/lib/stats";
 import { useAuth } from "@/lib/supabase";
@@ -61,7 +67,7 @@ function ClimbLoader() {
     return climbStats([climb], data.attempts.filter((a) => a.climbId === id))[0];
   }, [data, id]);
 
-  if (!data) return null;
+  if (!data) return <Loading />;
   if (!stat) {
     return (
       <main className="pb-10">
@@ -98,12 +104,39 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
   const canLog = climb.status === "project" && !!active;
   const dark = isDark(climb.color);
 
+  const personaResult = usePersona(data);
+  const persona = personaResult?.ready ? personaResult.persona.id : undefined;
+  const rest = useRest();
+  const resting = rest && rest.climbId === climb.id ? rest : null;
+
+  // How the guess made before the first go turned out, and the running score.
+  const verdict =
+    guess && stat.attemptsToSend !== undefined
+      ? stat.attemptsToSend > guess.max
+        ? ("harder" as const)
+        : stat.attemptsToSend < guess.min
+          ? ("easier" as const)
+          : ("right" as const)
+      : undefined;
+  const reads = useMemo(() => {
+    let judged = 0;
+    let right = 0;
+    for (const s of climbStats(data.climbs, data.attempts)) {
+      const g = GUESSES.find((x) => x.id === s.climb.guess);
+      if (!g || s.attemptsToSend === undefined) continue;
+      judged++;
+      if (s.attemptsToSend >= g.min && s.attemptsToSend <= g.max) right++;
+    }
+    return { judged, right };
+  }, [data]);
+
   const fell = async () => {
     if (!active || busy) return;
     setBusy(true);
     const attempt = await logAttempt(climb.id, active.id, "fall");
     setJustLogged(true);
     setLabelling(attempt.id);
+    startRest(climb.id);
     setBusy(false);
   };
 
@@ -112,6 +145,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
     setBusy(true);
     await logAttempt(climb.id, active.id, "send");
     setJustLogged(true);
+    stopRest();
     setRain((n) => n + 1);
     // Let the tick draw and the holds fall before the review sheet covers them.
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -119,12 +153,29 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
     setBusy(false);
   };
 
+  // The companion reacts to the last thing that happened on this climb.
+  const last = attempts[attempts.length - 1];
+  const seed = stat.total + (climb.createdAt % 89);
+  const mood: Mood =
+    climb.status === "sent" ? "send" : resting?.done ? "ready" : resting ? "rest" : justLogged && last?.result === "fall" ? "fall" : "idle";
+  const line =
+    climb.status === "sent"
+      ? sendLine(seed, stat.attemptsToSend ?? stat.total, stat.sessions)
+      : resting?.done
+        ? readyLine(seed)
+        : (resting || justLogged) && last?.result === "fall"
+          ? fallLine(seed, last.reason)
+          : stat.total === 0
+            ? firstGoLine(seed)
+            : returnLine(seed, stat.total);
+  const showCompanion = canLog || (climb.status === "sent" && justLogged);
+
   const groups = [...new Set(attempts.map((a) => a.sessionId))]
     .map((sessionId) => ({ sessionId, list: attempts.filter((a) => a.sessionId === sessionId) }))
     .reverse();
 
   return (
-    <main className="pb-52">
+    <main className="pb-72">
       <div aria-hidden className="pointer-events-none absolute -left-10 top-16">
         <Hold
           kind={mainHold(climb)}
@@ -190,7 +241,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
             <dl className="mt-3 grid grid-cols-3 gap-2">
               <div className="rounded-[1.125rem] bg-wall px-3 py-2.5">
                 <dt className="muted text-xs font-semibold">Guessed</dt>
-                <dd className="display text-lg">{guess?.label ?? "None"}</dd>
+                <dd className={guess ? "display text-lg" : "muted pt-1 text-sm font-semibold"}>{guess?.label ?? "No guess"}</dd>
               </div>
               <div
                 className="rounded-[1.125rem] px-3 py-2.5"
@@ -208,7 +259,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
               </div>
               <div className="rounded-[1.125rem] bg-wall px-3 py-2.5">
                 <dt className="muted text-xs font-semibold">Beta held</dt>
-                <dd className="display text-lg">{climb.read ? labelOf(READ_RESULTS, climb.read) : "?"}</dd>
+                <dd className={climb.read ? "display text-lg" : "muted pt-1 text-sm font-semibold"}>{climb.read ? labelOf(READ_RESULTS, climb.read) : "Not said"}</dd>
               </div>
             </dl>
           )}
@@ -292,7 +343,7 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
 
       <section className="mt-4">
         <div className="flex gap-2.5">
-          {climb.status === "project" && (
+          {climb.status === "project" && stat.total > 0 && (
             <button
               type="button"
               className="btn flex-1"
@@ -319,15 +370,21 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
             }}
           />
         </div>
-        {climb.status === "project" && (
+        {climb.status === "project" && stat.total > 0 && (
           <p className="muted mt-2 px-1.5 text-[0.8125rem] leading-snug">
             Retire it when the set comes down. It leaves your projects and stays in your stats.
           </p>
         )}
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-b from-wall/0 via-wall to-wall">
-        <div className="mx-auto max-w-md px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-5">
+      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-b from-wall/0 via-wall via-[22%] to-wall">
+        <div className="mx-auto max-w-md px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-7">
+          {showCompanion && (
+            <div className="mb-3 flex items-center gap-2">
+              <Companion persona={persona} mood={mood} size={60} line={line} className="min-w-0 flex-1" />
+              {resting && !resting.done && <RestRing left={resting.left} total={resting.total} />}
+            </div>
+          )}
           {climb.status === "sent" || climb.status === "retired" ? (
             <Cta href="/">Back to session</Cta>
           ) : !active ? (
@@ -370,11 +427,14 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
           </span>
         }
       >
-        {guess && (
-          <div className="-mt-1 flex flex-wrap gap-2 text-sm font-bold">
-            <span className="rounded-full bg-wall px-3 py-1.5">You guessed {guess.label}</span>
-            <span className="rounded-full bg-coral px-3 py-1.5">Took {stat.attemptsToSend ?? stat.total}</span>
-          </div>
+        {guess && verdict && (
+          <CalledIt
+            verdict={verdict}
+            guess={guess.label}
+            took={stat.attemptsToSend ?? stat.total}
+            line={guessLine(seed, verdict)}
+            reads={reads}
+          />
         )}
         <p className="mb-2.5 mt-5 pl-1 text-[0.9375rem] font-bold">Did your beta hold up?</p>
         <div role="group" aria-label="Did your beta hold up?" className="grid grid-cols-3 gap-2">
@@ -414,6 +474,82 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
         </Cta>
       </Sheet>
     </main>
+  );
+}
+
+/** The rest countdown as a ring. Tap to skip. */
+function RestRing({ left, total }: { left: number; total: number }) {
+  const r = 24;
+  const round = 2 * Math.PI * r;
+  return (
+    <button
+      type="button"
+      onClick={stopRest}
+      aria-label={`Resting, ${clock(left)} left. Tap to skip.`}
+      className="relative flex h-[3.75rem] w-[3.75rem] flex-none items-center justify-center rounded-full bg-white"
+    >
+      <svg width="60" height="60" viewBox="0 0 60 60" className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx="30" cy="30" r={r} fill="none" stroke="#EEF2FB" strokeWidth="5" />
+        <circle
+          cx="30"
+          cy="30"
+          r={r}
+          fill="none"
+          stroke="#A080F5"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={round}
+          strokeDashoffset={round * (1 - left / Math.max(1, total))}
+          style={{ transition: "stroke-dashoffset 500ms linear" }}
+        />
+      </svg>
+      <span className="relative text-center leading-none">
+        <span className="display block text-[0.8125rem] tabular-nums">{clock(left)}</span>
+        <span className="muted block text-[0.625rem] font-bold">skip</span>
+      </span>
+    </button>
+  );
+}
+
+/** The payoff for guessing your attempts before the first go. */
+function CalledIt({
+  verdict,
+  guess,
+  took,
+  line,
+  reads,
+}: {
+  verdict: "right" | "harder" | "easier";
+  guess: string;
+  took: number;
+  line: string;
+  reads: { judged: number; right: number };
+}) {
+  useEffect(() => {
+    if (verdict !== "right") return;
+    const t = setTimeout(() => sfx("called"), 350);
+    return () => clearTimeout(t);
+  }, [verdict]);
+  return (
+    <div className="-mt-1 rounded-[1.5rem] px-4 py-3.5" style={{ background: verdict === "right" ? "#FFDD55" : "#EEF2FB" }}>
+      <div className="flex items-center gap-3">
+        {verdict === "right" && (
+          <span className="stamp display flex-none rounded-[0.875rem] border-[3px] border-ink px-2.5 py-1 text-[0.9375rem] leading-none">
+            Called it!
+          </span>
+        )}
+        <p className="text-[0.9375rem] font-bold leading-snug">{line}</p>
+      </div>
+      <div className="mt-2.5 flex flex-wrap gap-2 text-sm font-bold">
+        <span className="rounded-full bg-white px-3 py-1.5">Guessed {guess}</span>
+        <span className="rounded-full bg-white px-3 py-1.5">Took {took}</span>
+        {reads.judged >= 2 && (
+          <span className="rounded-full bg-ink px-3 py-1.5 text-white">
+            {reads.right} of {reads.judged} reads called
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 

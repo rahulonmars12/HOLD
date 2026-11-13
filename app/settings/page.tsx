@@ -11,6 +11,7 @@ import { plural, timeLabel } from "@/lib/format";
 import { useCustomColors, useData } from "@/lib/hooks";
 import { supabase, usernameOf } from "@/lib/supabase";
 import { setSoundOn, sfx, soundOn, subscribeSound } from "@/lib/sfx";
+import { REST_CHOICES, setRestSeconds, useRestSetting } from "@/lib/rest";
 import { syncNow, useSyncStatus } from "@/lib/sync";
 
 export default function SettingsPage() {
@@ -182,6 +183,7 @@ export default function SettingsPage() {
       </section>
 
       <SoundCard />
+      <RestCard />
 
       <section className="card mt-3">
         <h2 className="h-card">Your colours</h2>
@@ -289,6 +291,34 @@ export default function SettingsPage() {
         </section>
       )}
     </main>
+  );
+}
+
+function RestCard() {
+  const seconds = useRestSetting();
+  return (
+    <section className="card mt-3">
+      <h2 className="h-card" id="rest-label">
+        Rest timer
+      </h2>
+      <p className="muted mt-1 text-sm leading-relaxed">
+        Starts after each fall and chimes when you&apos;re rested. Tap the ring on a climb to skip it.
+      </p>
+      <div role="radiogroup" aria-labelledby="rest-label" className="mt-3 grid grid-cols-4 gap-2">
+        {REST_CHOICES.map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={seconds === n}
+            className={`btn min-h-12 px-2 text-sm ${seconds === n ? "btn-ink" : "btn-soft"}`}
+            onClick={() => setRestSeconds(n)}
+          >
+            {n === 0 ? "Off" : `${n / 60} min`}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

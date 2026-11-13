@@ -1,5 +1,6 @@
 "use client";
 
+import { Loading } from "@/components/Loading";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,9 @@ import { useData, useNow, type Data } from "@/lib/hooks";
 import { climbingNow, nameOf, type LiveSession } from "@/lib/social";
 import { climbStats, sessionStats } from "@/lib/stats";
 import { usePersona, usePersonaReveal } from "@/lib/usePersona";
+import { Companion } from "@/components/Companion";
+import { PERSONAS } from "@/lib/persona";
+import { greeting, homeLine, homeTitle, sessionLine } from "@/lib/voice";
 import { useAuth } from "@/lib/supabase";
 import type { Session } from "@/lib/types";
 
@@ -43,7 +47,7 @@ export default function SessionPage() {
     };
   }, [needsWelcome, router]);
 
-  if (!data || onboarded === undefined || needsWelcome) return null;
+  if (!data || onboarded === undefined || needsWelcome) return <Loading />;
   if (data.active) return <ActiveSession data={data} session={data.active} />;
   return <StartSession data={data} />;
 }
@@ -121,23 +125,32 @@ function StartSession({ data }: { data: Data }) {
     .sort((a, b) => (b.lastAt ?? b.climb.createdAt) - (a.lastAt ?? a.climb.createdAt));
   const last = sessionStats(data.sessions, data.climbs, data.attempts)[0];
   const lastTop = last?.topSend ?? null;
+  const now = useNow();
+  const day = Math.floor(now / 86_400_000);
+  const persona = usePersona(data);
+  usePersonaReveal(persona);
+  const personaId = persona?.ready ? persona.persona.id : undefined;
 
   return (
     <main>
       <CornerHold kind="jug" fill="#FFDD55" shade="#E8BE2A" />
       <p className="muted relative text-[0.9375rem] font-semibold">
-        {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+        {greeting(new Date(now), personaId ? PERSONAS[personaId].name : undefined)}{" "}
+        {new Date(now).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
       </p>
-      <h1 className="h-page relative mt-1.5">
-        Ready to
-        <br />
-        climb?
-      </h1>
+      <h1 className="h-page relative mt-1.5 max-w-[14rem]">{homeTitle(day)}</h1>
+      <Companion
+        persona={personaId}
+        line={homeLine(day, {
+          projects: projects.length,
+          daysSince: last ? Math.floor((now - last.session.startedAt) / 86_400_000) : undefined,
+        })}
+        className="relative mt-4"
+      />
 
       <div className="card relative mt-5">
         <GymForm gyms={gyms} label="Where are you climbing?" cta="Start session" />
       </div>
-      <PersonaWatch data={data} />
       <BuddiesNow />
 
       {last && (
@@ -190,6 +203,9 @@ function StartSession({ data }: { data: Data }) {
 
 function ActiveSession({ data, session }: { data: Data; session: Session }) {
   const now = useNow();
+  const router = useRouter();
+  const persona = usePersona(data);
+  const personaId = persona?.ready ? persona.persona.id : undefined;
   const [ending, setEnding] = useState(false);
   const [note, setNote] = useState("");
 
@@ -225,12 +241,18 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
         <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-mint-deep" />
         Session, {duration(now - session.startedAt)} in
       </p>
-      <h1 className="h-page relative mt-1.5 max-w-[15rem] break-words">{session.gym}</h1>
+      <h1 className={`h-page relative mt-1.5 max-w-[15rem] [overflow-wrap:anywhere] ${session.gym.length > 14 ? "!text-[1.625rem] !leading-tight" : ""}`}>{session.gym}</h1>
       <ul className="relative mt-4 flex flex-wrap gap-2 text-[0.9375rem] font-semibold">
         <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(touched.size, "climb")}</li>
         <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(mine.length, "attempt")}</li>
         <li className="flex h-[2.375rem] items-center rounded-full bg-white px-3.5">{plural(sends.length, "send")}</li>
       </ul>
+      <Companion
+        persona={personaId}
+        mood={sends.length > 0 && mine[mine.length - 1]?.result === "send" ? "ready" : "idle"}
+        line={sessionLine(mine.length, { climbs: touched.size, sends: sends.length, falls: mine.length - sends.length })}
+        className="relative mt-4"
+      />
       <BuddiesNow gym={session.gym} />
 
       <Cta href="/new" plus className="relative mt-4">
@@ -247,9 +269,8 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
           </div>
         </section>
       ) : (
-        <p className="muted mt-7 leading-relaxed">
-          Nothing logged yet. Add the first climb you get on, warm-ups included: easy flashes are what make the hard
-          grades comparable.
+        <p className="muted mt-6 text-[0.9375rem] leading-relaxed">
+          Log everything, warm-ups too. Easy flashes are what make your hard grades mean something.
         </p>
       )}
 
@@ -323,9 +344,12 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
             sfx="save"
             className="flex-1 !min-h-14"
             onClick={async () => {
+              const logged = mine.length > 0;
               await endSession(session.id, note);
               setEnding(false);
               setNote("");
+              // A session with climbing in it gets a proper send-off.
+              if (logged) router.push(`/recap?s=${session.id}`);
             }}
           >
             End session
@@ -336,8 +360,3 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
   );
 }
 
-/** Shows the persona reveal after a session if it is new or has changed. */
-function PersonaWatch({ data }: { data: Data }) {
-  usePersonaReveal(usePersona(data));
-  return null;
-}

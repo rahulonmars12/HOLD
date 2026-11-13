@@ -1,5 +1,6 @@
 "use client";
 
+import { Loading } from "@/components/Loading";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -18,7 +19,7 @@ export default function AchievementsPage() {
     () => (data && crew ? progressAll(data.sessions, data.climbs, data.attempts, crew) : undefined),
     [data, crew],
   );
-  if (!progress) return null;
+  if (!progress) return <Loading />;
   const earned = ACHIEVEMENTS.filter((a) => progress[a.id]?.earned).length;
 
   return (

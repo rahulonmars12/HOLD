@@ -5,7 +5,7 @@
  * to download and they work offline. One switch in Settings turns both off.
  */
 
-export type Sound = "tap" | "fall" | "send" | "reason" | "sheet" | "save" | "nav" | "persona" | "achievement" | "clink";
+export type Sound = "tap" | "fall" | "send" | "reason" | "sheet" | "save" | "nav" | "persona" | "achievement" | "clink" | "recap" | "ready" | "cheer" | "called" | "mission";
 
 const KEY = "hold-sound";
 const VOLUME = 0.7;
@@ -108,6 +108,26 @@ const SOUNDS: Record<Sound, (c: AudioContext) => void> = {
     [1046.5, 1318.5, 1568, 1760, 2093, 2637].forEach((f, i) => tone(c, f, i * 0.06, 0.5, "sine", 0.05));
     tone(c, 196, 0.1, 1.2, "triangle", 0.08, 392);
   },
+  recap: (c) => {
+    [392, 493.88, 587.33, 783.99].forEach((f, i) => tone(c, f, i * 0.13, 0.5, "triangle", 0.1));
+    [392, 587.33, 783.99].forEach((f) => tone(c, f, 0.56, 1.0, "sine", 0.05));
+  },
+  ready: (c) => {
+    tone(c, 659.25, 0, 0.18, "sine", 0.1);
+    tone(c, 987.77, 0.14, 0.34, "sine", 0.1);
+  },
+  cheer: (c) => {
+    tone(c, 880, 0, 0.09, "triangle", 0.09, 1320);
+    tone(c, 1320, 0.08, 0.16, "triangle", 0.08, 1760);
+  },
+  called: (c) => {
+    [783.99, 987.77, 1174.66, 1567.98].forEach((f, i) => tone(c, f, i * 0.06, 0.32, "triangle", 0.1));
+    tone(c, 2349, 0.26, 0.4, "sine", 0.04);
+  },
+  mission: (c) => {
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => tone(c, f, i * 0.09, 0.45, "triangle", 0.11));
+    [523.25, 783.99, 1046.5].forEach((f) => tone(c, f, 0.5, 1.0, "sine", 0.05));
+  },
   save: (c) => {
     tone(c, 420, 0, 0.18, "sine", 0.07, 980);
     tone(c, 980, 0.12, 0.12, "sine", 0.05, 1400);
@@ -122,6 +142,11 @@ const HAPTICS: Partial<Record<Sound, number | number[]>> = {
   persona: [10, 60, 10, 60, 30],
   achievement: [20, 60, 40],
   clink: 12,
+  recap: [14, 70, 30],
+  ready: [18, 40, 18],
+  cheer: 10,
+  called: [10, 40, 10, 40, 24],
+  mission: [20, 60, 40],
 };
 
 export function sfx(name: Sound) {

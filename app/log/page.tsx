@@ -1,5 +1,6 @@
 "use client";
 
+import { Loading } from "@/components/Loading";
 import { useMemo, useState } from "react";
 import { ClimbRow, GradeChip, describeClimb } from "@/components/ClimbCards";
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -34,7 +35,7 @@ export default function LogPage() {
     () => (data ? sessionStats(data.sessions, data.climbs, data.attempts) : []),
     [data],
   );
-  if (!data) return null;
+  if (!data) return <Loading />;
 
   const statOf = new Map(stats.map((s) => [s.climb.id, s]));
   const climbs = stats

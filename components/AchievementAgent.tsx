@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/supabase";
 import { AchievementUnlock } from "./AchievementUnlock";
 
 /** Screens where an unlock would get in the way; it waits until you leave them. */
-const BUSY = ["/climb", "/new", "/welcome", "/persona", "/lab"];
+const BUSY = ["/climb", "/new", "/welcome", "/persona", "/lab", "/recap"];
 
 /** Watches the log and shows the full-screen unlock for each new achievement. */
 export function AchievementAgent() {

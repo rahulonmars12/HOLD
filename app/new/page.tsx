@@ -1,5 +1,6 @@
 "use client";
 
+import { Loading } from "@/components/Loading";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -67,7 +68,7 @@ export default function NewClimbPage() {
     if (photoUrl) URL.revokeObjectURL(photoUrl);
   }, [photoUrl]);
 
-  if (!data) return null;
+  if (!data) return <Loading />;
 
   if (!data.active) {
     return (
@@ -333,7 +334,9 @@ export default function NewClimbPage() {
       <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-b from-wall/0 via-wall to-wall">
         <div className="mx-auto max-w-md px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-5">
           {missing.length > 0 && (
-            <p className="muted mb-2 text-center text-sm font-semibold">Still needs {missing.join(" and ")}.</p>
+            <p className="mx-auto mb-2 w-fit rounded-full bg-white px-3.5 py-1.5 text-center text-sm font-semibold shadow-[0_2px_10px_rgb(30_27_58/0.08)]">
+              Still needs {missing.join(" and ")}
+            </p>
           )}
           <Cta onClick={save} disabled={missing.length > 0 || saving} sfx="save">
             Save and start climbing
