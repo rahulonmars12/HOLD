@@ -181,8 +181,8 @@ function ClimbScreen({ data, stat }: { data: Data; stat: ClimbStat }) {
           kind={mainHold(climb)}
           fill={dark ? "#C3C7DA" : holdHex(climb.color)}
           shade={dark ? "#A9AEC6" : holdShade(climb.color)}
-          // A navy bolt this big would sit under the title text, so it takes the shade instead.
-          bolt={dark ? "#A9AEC6" : holdShade(climb.color)}
+          // The grade and name sit on top of this hold, so it has no bolt to clash with them.
+          bolt={false}
           size={mainHold(climb) === "crimp" ? 470 : 330}
           rotate={-6}
           viewBox={mainHold(climb) === "crimp" ? "0 11 40 17" : "0 0 40 40"}

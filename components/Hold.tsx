@@ -113,7 +113,8 @@ export function CornerHold({
 }) {
   return (
     <div aria-hidden className="pointer-events-none absolute" style={{ right, top }}>
-      <Hold kind={kind} fill={fill} shade={shade} size={size} rotate={rotate} />
+      {/* Titles often run over this hold, so its bolt is tonal instead of navy and never fights the text. */}
+      <Hold kind={kind} fill={fill} shade={shade} bolt={shade} size={size} rotate={rotate} />
     </div>
   );
 }
