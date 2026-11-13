@@ -5,7 +5,7 @@ import { useEffect, useMemo } from "react";
 import { getMeta, setMeta } from "./db";
 import type { Data } from "./hooks";
 import { computePersona, type PersonaResult } from "./persona";
-import { publishPersona } from "./social";
+import { publishEvent, publishPersona } from "./social";
 import { useAuth } from "./supabase";
 
 export function usePersona(data: Data | undefined): PersonaResult | undefined {
@@ -45,10 +45,17 @@ export function usePersonaReveal(result: PersonaResult | undefined) {
     if (!id || !dash || !uid) return;
     const key = `${uid}:${id}:${dash}`;
     (async () => {
-      if ((await getMeta<string>("personaShared")) === key) return;
+      const shared = await getMeta<string>("personaShared");
+      if (shared === key) return;
       try {
         await publishPersona(id, dash);
         await setMeta("personaShared", key);
+        // A change of main persona is news for the crew feed.
+        const [sharedBy, from] = shared?.split(":") ?? [];
+        if (from !== id) {
+          const day = new Date().toISOString().slice(0, 10);
+          await publishEvent("persona", `${id}@${day}`, { to: id, from: sharedBy === uid ? from : undefined }).catch(() => {});
+        }
       } catch {
         // Database without personas yet (migration 0004): try again another time.
       }

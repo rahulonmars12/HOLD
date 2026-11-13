@@ -10,12 +10,13 @@ import { Cta } from "@/components/Cta";
 import { CornerHold } from "@/components/Hold";
 import { Sheet } from "@/components/Sheet";
 import { gradeLabel, gymKey } from "@/lib/constants";
-import { db, endSession, getMeta, startSession } from "@/lib/db";
+import { addClimb, db, endSession, getMeta, logAttempt, startSession } from "@/lib/db";
 import { dayLabel, duration, plural } from "@/lib/format";
 import { useData, useNow, type Data } from "@/lib/hooks";
 import { climbingNow, nameOf, type LiveSession } from "@/lib/social";
 import { climbStats, sessionStats } from "@/lib/stats";
 import { usePersona, usePersonaReveal } from "@/lib/usePersona";
+import { MissionCard } from "@/components/MissionCard";
 import { Companion } from "@/components/Companion";
 import { PERSONAS } from "@/lib/persona";
 import { greeting, homeLine, homeTitle, sessionLine } from "@/lib/voice";
@@ -152,6 +153,7 @@ function StartSession({ data }: { data: Data }) {
         <GymForm gyms={gyms} label="Where are you climbing?" cta="Start session" />
       </div>
       <BuddiesNow />
+      <MissionCard data={data} now={now} className="mt-4" />
 
       {last && (
         <section className="mt-7">
@@ -208,6 +210,8 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
   const personaId = persona?.ready ? persona.persona.id : undefined;
   const [ending, setEnding] = useState(false);
   const [note, setNote] = useState("");
+  const [warming, setWarming] = useState(false);
+  const [warmed, setWarmed] = useState(0);
 
   const stats = useMemo(() => climbStats(data.climbs, data.attempts), [data.climbs, data.attempts]);
   const mine = data.attempts.filter((a) => a.sessionId === session.id);
@@ -228,6 +232,7 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
   const waiting = stats
     .filter((s) => s.climb.status === "project" && gymKey(s.climb.gym) === gymKey(session.gym) && !current.includes(s))
     .sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0));
+  const topEver = Math.max(0, ...stats.filter((x) => x.sent).map((x) => x.climb.grade));
   const sends = mine.filter((a) => a.result === "send");
   const topToday = Math.max(
     -1,
@@ -258,6 +263,10 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
       <Cta href="/new" plus className="relative mt-4">
         Add a climb
       </Cta>
+      <button type="button" className="btn mt-2.5 w-full bg-white" onClick={() => setWarming(true)}>
+        Quick warm-up
+      </button>
+      <MissionCard data={data} now={now} className="mt-4" />
 
       {current.length > 0 ? (
         <section className="mt-7">
@@ -295,6 +304,51 @@ function ActiveSession({ data, session }: { data: Data; session: Session }) {
       <button type="button" className="btn btn-outline mt-6 w-full" onClick={() => setEnding(true)}>
         End session
       </button>
+
+      <Sheet open={warming} onClose={() => setWarming(false)} title="Quick warm-up">
+        <p className="muted -mt-2 text-[0.9375rem]">Tap a grade to log a flash. No tags, no fuss.</p>
+        <div className="mt-4 grid grid-cols-4 gap-2.5">
+          {Array.from({ length: Math.max(4, Math.min(8, topEver)) }, (_, g) => (
+            <button
+              key={g}
+              type="button"
+              data-sfx="send"
+              className="display flex h-16 items-center justify-center rounded-[1.25rem] bg-wall text-lg active:scale-95"
+              onClick={async () => {
+                // Reuse the last warm-up's look so the tags stay consistent.
+                const lastWarm = data.climbs.filter((c) => c.name === "Warm-up").sort((a, b) => b.createdAt - a.createdAt)[0];
+                const climb = await addClimb({
+                  gym: session.gym,
+                  grade: g,
+                  color: lastWarm?.color ?? "yellow",
+                  angle: lastWarm?.angle ?? "vertical",
+                  holds: lastWarm?.holds ?? ["jug"],
+                  styles: [],
+                  name: "Warm-up",
+                  plan: "",
+                });
+                await logAttempt(climb.id, session.id, "send");
+                setWarmed((n) => n + 1);
+              }}
+            >
+              {gradeLabel(g)}
+            </button>
+          ))}
+        </div>
+        <p role="status" className="mt-3 min-h-5 text-sm font-bold">
+          {warmed > 0 ? `${plural(warmed, "warm-up")} logged. Keep tapping or close.` : ""}
+        </p>
+        <button
+          type="button"
+          className="btn btn-outline mt-2 w-full"
+          onClick={() => {
+            setWarming(false);
+            setWarmed(0);
+          }}
+        >
+          Done
+        </button>
+      </Sheet>
 
       <Sheet open={ending} onClose={() => setEnding(false)} title="End this session?">
         {mine.length === 0 ? (

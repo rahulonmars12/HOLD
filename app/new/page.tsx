@@ -69,6 +69,7 @@ export default function NewClimbPage() {
   }, [photoUrl]);
 
   if (!data) return <Loading />;
+  const lastClimb = data.climbs.filter((c) => c.name !== "Warm-up").sort((a, b) => b.createdAt - a.createdAt)[0];
 
   if (!data.active) {
     return (
@@ -168,6 +169,21 @@ export default function NewClimbPage() {
         </svg>
       </Link>
       <h1 className="display relative mt-4 text-[1.875rem] leading-tight">Add a climb</h1>
+      {lastClimb && (
+        <button
+          type="button"
+          className="relative mt-3 flex min-h-12 w-full items-center gap-3 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-left"
+          onClick={() =>
+            setForm((f) => ({ ...f, grade: lastClimb.grade, color: lastClimb.color, angle: lastClimb.angle, holds: lastClimb.holds, styles: lastClimb.styles, problemId: null }))
+          }
+        >
+          <GradeChip climb={lastClimb} size={40} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[0.9375rem] font-bold leading-tight">Same again</span>
+            <span className="muted block truncate text-[0.8125rem]">Copy the tags from your last climb: {describeClimb(lastClimb).toLowerCase()}</span>
+          </span>
+        </button>
+      )}
 
       <section className="card relative mt-5 flex gap-3.5">
         <button

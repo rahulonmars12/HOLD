@@ -40,7 +40,7 @@ and when you add a climb, pick one a buddy already logged at that gym to see
 how everyone got on with it. Share the link from the Buddies tab to invite
 people. Only buddies can see your log; remove someone to hide it from them.
 
-**Climbing personas.** After 5 sessions, HOLD! works out which of 12
+**Climbing personas.** After your first session, HOLD! works out which of 12
 animals you climb like (Gecko, Monkey, Gorilla, Spider, Octopus, Mountain Goat,
 Cat, Tortoise, Honey Badger, Squirrel, Owl, Koala) from the last 90 days:
 wall angles, holds, styles, why you fall, attempts per send, flash rate and
@@ -64,6 +64,34 @@ for falls, sends, reasons, sheets, saving and tabs), haptics on Android, and
 light springy animations. Settings has a switch; Reduce Motion turns the
 movement off.
 
+**Companion and voice.** Your persona sits on Home, Session and each climb
+and reacts to what you do: a line after a fall (it changes with the reason you
+pick), a nap while you rest, a cheer on a send. Lines live in `lib/voice.ts`.
+
+**Session recap.** Ending a session opens a wrap-up: numbers count up, your
+top send, what was worth remembering, new pins, and a teaser if your persona is
+about to evolve. Share makes a picture card on the phone (`lib/share.ts`);
+pins and personas can be shared the same way.
+
+**Rest timer.** Starts after each fall (Off, 1, 2 or 3 minutes in Settings),
+shown as a ring next to the companion; tap it to skip. Chimes when you're rested.
+
+**Quick logging.** "Quick warm-up" on the session screen logs a flash in two
+taps. "Same again" on Add a climb copies the tags of your last climb.
+
+**Called it!** Guess your attempts before the first go; when the send lands
+inside your guess you get a stamp and a running "reads called" score.
+
+**Weekly mission.** Picked every Monday from your biggest "Work on" gap: try
+three climbs with that angle, hold or style. A ring on Home and Session shows
+progress. Logic in `lib/mission.ts`.
+
+**Crew.** The Buddies tab has a feed of sends, new pins, persona changes and
+finished sessions, each with a cheer. Tap a buddy for their page: persona, pin
+board and top sends. While the app is open a small banner tells you when a buddy
+cheers you, sends one of your open projects or starts climbing at your gym.
+Needs `supabase/migrations/0005_crew.sql`.
+
 **First run.** A short onboarding: what HOLD! does, making an account (or
 skipping to keep the log on the phone), and the first session.
 
@@ -82,8 +110,9 @@ The service worker (offline support) only registers in production builds.
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor**, paste `supabase/migrations/0001_tickmark.sql`, and
    run it. Then do the same with `supabase/migrations/0002_username_accounts.sql`
-   `supabase/migrations/0003_everyone_is_buddies.sql` and
-   `supabase/migrations/0004_personas.sql`.
+   `supabase/migrations/0003_everyone_is_buddies.sql`,
+   `supabase/migrations/0004_personas.sql` and
+   `supabase/migrations/0005_crew.sql`.
    These create the tables, the access rules (you and your accepted buddies
    only) and the `photos` storage bucket.
 3. Open **Authentication → Sign In / Providers → Email**. Keep the Email

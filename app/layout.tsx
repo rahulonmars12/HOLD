@@ -5,6 +5,7 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { AchievementAgent } from "@/components/AchievementAgent";
+import { CrewAgent } from "@/components/CrewAgent";
 import { SfxAgent } from "@/components/SfxAgent";
 import { SyncAgent } from "@/components/SyncAgent";
 
@@ -49,6 +50,7 @@ export default function RootLayout({
         <SyncAgent />
         <SfxAgent />
         <AchievementAgent />
+        <CrewAgent />
       </body>
     </html>
   );

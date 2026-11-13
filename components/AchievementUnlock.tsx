@@ -1,7 +1,8 @@
 "use client";
 
+import { shareCard } from "@/lib/share";
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RARITY_LABEL, byId } from "@/lib/achievements";
 import { pieceSound, sfx } from "@/lib/sfx";
 import { Aurora, Burst, Halo, RARITY_BG } from "./Aurora";
@@ -23,6 +24,8 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
   const def = byId(id);
   const [shown, setShown] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const coin = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!def) return;
@@ -66,7 +69,7 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
       <div className="relative mt-8">
         <Halo colors={RARITY_BG[def.rarity].halo} size={310} className={locked ? "" : "halo-fast"} />
         {locked && <Burst delay={0} />}
-        <div className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: `drop-shadow(0 14px 22px ${RARITY_BG[def.rarity].halo[0]}66)` }}>
+        <div ref={coin} className={`relative ${locked ? "coin-float" : ""}`} style={{ filter: `drop-shadow(0 14px 22px ${RARITY_BG[def.rarity].halo[0]}66)` }}>
           <Badge id={id} size={250} assemble label={def.name} />
         </div>
       </div>
@@ -85,9 +88,37 @@ export function AchievementUnlock({ id, more = 0, onDone }: { id: string; more?:
       {shown && <HoldRain />}
       <div className="absolute inset-x-5 bottom-[calc(1.5rem+env(safe-area-inset-bottom))]">
         {shown ? (
-          <button type="button" className="cta cta-center" onClick={onDone}>
-            Nice!
-          </button>
+          <div className="grid grid-cols-[1fr_1.6fr] gap-3">
+            <button
+              type="button"
+              className="btn min-h-16 bg-white text-base"
+              disabled={sharing}
+              data-sfx="save"
+              onClick={async () => {
+                const svg = coin.current?.querySelector("svg");
+                if (!svg) return;
+                setSharing(true);
+                await shareCard(
+                  {
+                    kicker: `Pin No. ${String(def.no).padStart(2, "0")} of 27 · ${RARITY_LABEL[def.rarity]}`,
+                    title: def.name,
+                    lines: [def.done],
+                    art: { svg },
+                    tint: RARITY_BG[def.rarity].colors,
+                    footer: "Achievement unlocked",
+                  },
+                  `hold-pin-${def.id}`,
+                  `I earned the "${def.name}" pin on HOLD!`,
+                );
+                setSharing(false);
+              }}
+            >
+              {sharing ? "Making…" : "Share"}
+            </button>
+            <button type="button" className="cta cta-center" onClick={onDone}>
+              Nice!
+            </button>
+          </div>
         ) : (
           <button type="button" className="mx-auto block min-h-11 px-4 text-sm font-semibold text-ink/60" onClick={onDone} data-sfx="none">
             Skip

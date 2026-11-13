@@ -141,8 +141,8 @@ export async function makeCard(spec: CardSpec): Promise<Blob> {
 
   // Measure everything first so the block can be centred in the card.
   const art = spec.art ? await loadImage("src" in spec.art ? spec.art.src : svgSource(spec.art.svg)).catch(() => null) : null;
-  const artH = art ? (spec.stats?.length ? 330 : 430) : 0;
-  let titleSize = 104;
+  let artH = art ? (spec.stats?.length ? 330 : 430) : 0;
+  let titleSize = spec.stats?.length ? 88 : 104;
   let titleLines: string[] = [];
   for (; titleSize >= 56; titleSize -= 8) {
     ctx.font = `900 ${titleSize}px ${DISPLAY}`;
@@ -152,9 +152,12 @@ export async function makeCard(spec: CardSpec): Promise<Blob> {
   ctx.font = `600 40px ${SANS}`;
   const body = (spec.lines ?? []).flatMap((l) => wrap(ctx, l, inner));
   const stats = (spec.stats ?? []).slice(0, 4);
-  const blockH =
-    60 + 36 + (art ? artH + 30 : 0) + titleLines.length * titleSize * 1.08 + (body.length ? 24 + body.length * 54 : 0) + (stats.length ? 50 + 190 : 0);
-  let y = 150 + (H - 300 - 110 - blockH) / 2 + 20;
+  const rest = 60 + 36 + titleLines.length * titleSize * 1.08 + (body.length ? 24 + body.length * 54 : 0) + (stats.length ? 50 + 190 : 0);
+  // The card's inside, less the footer row; the picture shrinks if the rest needs the room.
+  const room = H - 300 - 60 - 230;
+  if (art) artH = Math.max(160, Math.min(artH, room - rest - 30));
+  const blockH = rest + (art ? artH + 30 : 0);
+  let y = 150 + 50 + Math.max(0, (room - blockH) / 2);
 
   // Kicker pill.
   ctx.font = `700 34px ${SANS}`;

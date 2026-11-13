@@ -78,7 +78,7 @@ export function Nav() {
       >
         <ul className="mx-auto flex h-16 max-w-md items-center rounded-full bg-white px-2 shadow-[0_6px_20px_rgb(30_27_58/0.14)]">
           {TABS.map((tab) => {
-            const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
+            const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href) || (tab.href === "/buddies" && pathname.startsWith("/buddy"));
             return (
               <li key={tab.href} className={`nav-item ${active ? "flex-[1.7]" : "flex-1"}`}>
                 <Link

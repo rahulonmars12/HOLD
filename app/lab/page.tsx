@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { AchievementUnlock } from "@/components/AchievementUnlock";
 import { Badge } from "@/components/Badge";
+import { FeedRow, NudgeToast } from "@/components/Crew";
 import { Evolution } from "@/components/Evolution";
 import { HoldRain } from "@/components/HoldRain";
 import { Sheet } from "@/components/Sheet";
@@ -12,6 +13,7 @@ import { ACHIEVEMENTS } from "@/lib/achievements";
 import { FAIL_REASONS } from "@/lib/constants";
 import { PERSONAS, PERSONA_ORDER, personaImage, type PersonaId } from "@/lib/persona";
 import { evolveSound, pieceSound, sfx, type Sound } from "@/lib/sfx";
+import type { FeedItem } from "@/lib/social";
 import { useCountUp } from "@/lib/useCountUp";
 
 /**
@@ -101,6 +103,7 @@ export default function LabPage() {
         </div>
       </section>
 
+      <CrewDemo />
       <LogDemo />
       <InsightsDemo />
       <SoundBoard />
@@ -108,6 +111,65 @@ export default function LabPage() {
       {unlock && <AchievementUnlock key={unlock} id={unlock} onDone={() => setUnlock(null)} />}
       {evo && <Evolution key={evo.key} from={evo.from} to={evo.to} onDone={() => setEvo(null)} />}
     </main>
+  );
+}
+
+const noop = () => () => {};
+
+const DEMO_FEED: FeedItem[] = [
+  {
+    key: "a",
+    who: { id: "maya", username: "maya", display_name: "Maya" },
+    isMe: false,
+    at: Date.UTC(2026, 10, 12),
+    kind: "send",
+    climb: { id: "x", createdAt: 0, gym: "Demo gym", grade: 5, color: "pink", angle: "overhang", holds: ["sloper"], styles: ["compression"], status: "sent", whatWorked: "Toe hook on the volume, then just squeeze." },
+    cheers: { count: 2, mine: false, names: ["Tom", "Linh"] },
+  },
+  { key: "b", who: { id: "tom", username: "tom", display_name: "Tom" }, isMe: false, at: Date.UTC(2026, 10, 11), kind: "pin", ref: "stubborn", cheers: { count: 0, mine: false, names: [] } },
+  { key: "c", who: { id: "linh", username: "linh", display_name: "Linh" }, isMe: false, at: Date.UTC(2026, 10, 10), kind: "persona", ref: "gecko", data: { to: "gecko", from: "koala" }, cheers: { count: 1, mine: true, names: [] } },
+  { key: "d", who: { id: "me", username: "you", display_name: "You" }, isMe: true, at: Date.UTC(2026, 10, 9), kind: "session", ref: "s", data: { gym: "Demo gym", climbs: 8, sends: 5, top: 6 }, cheers: { count: 2, mine: false, names: ["Maya", "Tom"] } },
+];
+
+/** The crew feed, cheers and the banner a buddy's news arrives in, with made-up buddies. */
+function CrewDemo() {
+  const [items, setItems] = useState(DEMO_FEED);
+  const [nudge, setNudge] = useState(0);
+  // Dates are shown relative to today, so the list waits for the browser.
+  const mounted = useSyncExternalStore(noop, () => true, () => false);
+  return (
+    <section className="card mt-3">
+      <h2 className="h-card">Crew</h2>
+      <p className="muted mt-1 text-sm">Made-up buddies. Tap a star to cheer; play the banner you get when a buddy sends your project.</p>
+      <ul className="-mx-2 mt-3 flex flex-col gap-1 rounded-[1.5rem] bg-wall p-2">
+        {mounted && items.map((item) => (
+          <FeedRow
+            key={item.key}
+            item={item}
+            onCheer={() =>
+              setItems((list) =>
+                list.map((i) => (i.key === item.key ? { ...i, cheers: { ...i.cheers, mine: !i.cheers.mine, count: i.cheers.count + (i.cheers.mine ? -1 : 1) } } : i)),
+              )
+            }
+          />
+        ))}
+      </ul>
+      <button
+        type="button"
+        className="btn btn-ink mt-3 w-full"
+        data-sfx="cheer"
+        onClick={() => setNudge((n) => n + 1)}
+      >
+        Play a buddy banner
+      </button>
+      {nudge > 0 && (
+        <NudgeToast
+          key={nudge}
+          nudge={{ id: String(nudge), who: DEMO_FEED[0].who, persona: "monkey", text: nudge % 2 ? "just sent your project, the pink V5" : "cheered your send" }}
+          onClose={() => setNudge(0)}
+        />
+      )}
+    </section>
   );
 }
 

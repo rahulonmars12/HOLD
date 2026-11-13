@@ -7,6 +7,7 @@ import { Aurora, Halo } from "@/components/Aurora";
 import { Evolution } from "@/components/Evolution";
 import { useData } from "@/lib/hooks";
 import { MIN_SESSIONS, PERSONAS, PERSONA_COLORS, PERSONA_ORDER, personaImage, type Persona, type PersonaId } from "@/lib/persona";
+import { shareCard } from "@/lib/share";
 import { usePersona } from "@/lib/usePersona";
 
 const noop = () => () => {};
@@ -69,22 +70,20 @@ function Reveal({ persona }: { persona: Persona }) {
   const [shared, setShared] = useState(false);
 
   const share = async () => {
-    const text = `I climb like ${info.article} ${info.name} on HOLD!, with a dash of ${dash.name}. ${info.line}`;
-    const url = window.location.origin;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "My HOLD! persona", text, url });
-        return;
-      }
-    } catch {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(`${text} ${url}`);
-      setShared(true);
-    } catch {
-      // Nothing more to try; the button just stays as it is.
-    }
+    const text = `I climb like ${info.article} ${info.name} on HOLD!, with a dash of ${dash.name}.`;
+    const result = await shareCard(
+      {
+        kicker: `I climb like ${info.article}`,
+        title: info.name,
+        lines: [`With a dash of ${dash.name}.`, info.line],
+        art: { src: personaImage(persona.id) },
+        tint: PERSONA_COLORS[persona.id],
+        footer: info.tag,
+      },
+      `hold-${persona.id}`,
+      text,
+    );
+    if (result === "saved") setShared(true);
   };
 
   return (
@@ -125,7 +124,7 @@ function Reveal({ persona }: { persona: Persona }) {
 
       <div className="relative mx-5 mt-4 grid grid-cols-2 gap-3">
         <button type="button" className="btn min-h-14 bg-white text-base" onClick={share} data-sfx="save">
-          {shared ? "Copied" : "Share"}
+          {shared ? "Saved" : "Share"}
         </button>
         <Link href="/insights" className="btn btn-ink min-h-14 text-base">
           Nice!

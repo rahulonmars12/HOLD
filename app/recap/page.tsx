@@ -20,6 +20,8 @@ import { PERSONAS, personaImage } from "@/lib/persona";
 import { buildRecap, type Recap } from "@/lib/recap";
 import { sfx } from "@/lib/sfx";
 import { shareCard } from "@/lib/share";
+import { publishEvent } from "@/lib/social";
+import { useAuth } from "@/lib/supabase";
 import { useCountUp } from "@/lib/useCountUp";
 import { usePersona } from "@/lib/usePersona";
 import { recapLine, recapTitle } from "@/lib/voice";
@@ -93,6 +95,14 @@ function RecapScreen({ recap }: { recap: Recap }) {
     const t = setTimeout(() => sfx("recap"), 250);
     return () => clearTimeout(t);
   }, []);
+
+  // Tell the crew feed about the session, once.
+  const uid = useAuth()?.user.id;
+  const { climbs, sends, attempts, top } = recap;
+  useEffect(() => {
+    if (!uid || attempts === 0) return;
+    void publishEvent("session", session.id, { gym: session.gym, climbs, sends, attempts, top: top?.grade }).catch(() => {});
+  }, [uid, session.id, session.gym, climbs, sends, attempts, top]);
 
   const share = async () => {
     if (shareState === "busy") return;

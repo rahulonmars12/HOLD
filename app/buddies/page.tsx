@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ProfileForm, SignIn, useProfile } from "@/components/Account";
-import { GradeChip, describeClimb } from "@/components/ClimbCards";
+import Link from "next/link";
+import { FeedRow, PersonaFace } from "@/components/Crew";
 import { CornerHold, Hold } from "@/components/Hold";
-import { dayLabel, duration } from "@/lib/format";
+import { duration } from "@/lib/format";
 import { useData, useNow } from "@/lib/hooks";
-import { PERSONAS, personaImage, type PersonaId } from "@/lib/persona";
+import { PERSONAS, type PersonaId } from "@/lib/persona";
 import { usePersona } from "@/lib/usePersona";
 import {
   acceptBuddy,
@@ -14,11 +15,13 @@ import {
   listBuddies,
   nameOf,
   personasOf,
-  recentSends,
+  cheer,
+  crewFeed,
+  uncheer,
   removeBuddy,
   requestBuddy,
   type BuddyLink,
-  type BuddySend,
+  type Feed as CrewFeed,
   type LiveSession,
 } from "@/lib/social";
 import { cloudEnabled } from "@/lib/supabase";
@@ -62,7 +65,7 @@ function Feed({ username }: { username: string }) {
   const now = useNow();
   const [links, setLinks] = useState<BuddyLink[]>([]);
   const [live, setLive] = useState<LiveSession[]>([]);
-  const [sends, setSends] = useState<BuddySend[]>([]);
+  const [feed, setFeed] = useState<CrewFeed>({ items: [], cheersReady: true });
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState("");
@@ -72,10 +75,10 @@ function Feed({ username }: { username: string }) {
 
   const load = useCallback(async () => {
     try {
-      const [l, n, s] = await Promise.all([listBuddies(), climbingNow(), recentSends()]);
+      const [l, n, s] = await Promise.all([listBuddies(), climbingNow(), crewFeed()]);
       setLinks(l);
       setLive(n);
-      setSends(s);
+      setFeed(s);
       setPersonas(await personasOf(l.filter((x) => x.status === "accepted").map((x) => x.other.id)));
       setError(null);
     } catch (e) {
@@ -95,6 +98,20 @@ function Feed({ username }: { username: string }) {
       clearInterval(t);
     };
   }, [load]);
+
+  const toggleCheer = (key: string) => {
+    const item = feed.items.find((i) => i.key === key);
+    if (!item || item.isMe) return;
+    const on = !item.cheers.mine;
+    // Show it straight away; put it back if the server says no.
+    const apply = (mine: boolean) =>
+      setFeed((f) => ({
+        ...f,
+        items: f.items.map((i) => (i.key === key ? { ...i, cheers: { ...i.cheers, mine, count: Math.max(0, i.cheers.count + (mine ? 1 : -1)) } } : i)),
+      }));
+    apply(on);
+    (on ? cheer(item.who.id, key) : uncheer(key)).catch(() => apply(!on));
+  };
 
   const accepted = links.filter((l) => l.status === "accepted");
   const incoming = links.filter((l) => l.status === "pending" && l.incoming);
@@ -165,12 +182,12 @@ function Feed({ username }: { username: string }) {
                 ) : (
                   <Hold kind="jug" fill="#5FDDB0" shade="#3FC998" size={44} rotate={-8} />
                 )}
-                <span className="min-w-0 flex-1">
+                <Link href={`/buddy?u=${l.who.id}`} className="min-w-0 flex-1">
                   <span className="block font-bold">{nameOf(l.who)}</span>
                   <span className="muted block truncate text-sm">
                     {l.session.gym}, {duration(now - l.session.startedAt)} in
                   </span>
-                </span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -178,36 +195,24 @@ function Feed({ username }: { username: string }) {
       </section>
 
       <section className="mt-7">
-        <h2 className="h-card">Recent sends</h2>
-        {sends.length === 0 ? (
+        <h2 className="h-card">Crew feed</h2>
+        {feed.items.length === 0 ? (
           <p className="muted mt-2 text-[0.9375rem]">
             {accepted.length === 0
               ? "Nobody else has joined yet. Invite your crew below."
               : loaded
-                ? "No sends from your buddies in the last three weeks."
+                ? "Quiet for three weeks. Go send something and start it off."
                 : "Checking…"}
           </p>
         ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {sends.map((s) => (
-              <li key={s.who.id + s.climb.id} className="rounded-[1.5rem] bg-white py-2.5 pl-2.5 pr-4">
-                <div className="flex items-center gap-3.5">
-                  <GradeChip climb={s.climb} size={52} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[0.9375rem] font-bold">
-                      {nameOf(s.who)} sent {s.climb.name || describeClimb(s.climb).split(",")[0].toLowerCase()}
-                    </span>
-                    <span className="muted block truncate text-[0.8125rem]">
-                      {s.climb.gym}, {dayLabel(s.climb.sentAt ?? s.climb.createdAt).toLowerCase()}
-                    </span>
-                  </span>
-                </div>
-                {s.climb.whatWorked && (
-                  <p className="muted ml-[4.125rem] mt-1 text-sm leading-relaxed">&ldquo;{s.climb.whatWorked}&rdquo;</p>
-                )}
-              </li>
-            ))}
-          </ul>
+          <>
+            {feed.cheersReady && <p className="muted mt-1 text-sm">Tap the star to cheer a buddy on.</p>}
+            <ul className="mt-3 flex flex-col gap-2">
+              {feed.items.map((item) => (
+                <FeedRow key={item.key} item={item} cheersReady={feed.cheersReady} onCheer={() => toggleCheer(item.key)} />
+              ))}
+            </ul>
+          </>
         )}
       </section>
 
@@ -263,10 +268,10 @@ function Feed({ username }: { username: string }) {
             {[...accepted, ...outgoing].map((l) => (
               <li key={l.other.id} className="flex items-center gap-3 rounded-[1.5rem] bg-white py-3 pl-4 pr-3">
                 {personas.get(l.other.id) && <PersonaFace id={personas.get(l.other.id)!} size={44} />}
-                <span className="min-w-0 flex-1">
+                <Link href={`/buddy?u=${l.other.id}`} className="min-w-0 flex-1">
                   <span className="block font-bold">{nameOf(l.other)}</span>
                   {l.other.username && <span className="muted block text-sm">@{l.other.username}</span>}
-                </span>
+                </Link>
                 {l.status === "pending" && <span className="muted text-sm font-semibold">Request sent</span>}
                 <button
                   type="button"
@@ -318,15 +323,6 @@ function InviteButton() {
   );
 }
 
-function PersonaFace({ id, size }: { id: string; size: number }) {
-  if (!(id in PERSONAS)) return null;
-  const info = PERSONAS[id as PersonaId];
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={personaImage(info.id)} alt={info.name} title={info.name} width={size} height={size} className="flex-none" />
-  );
-}
-
 /** Everyone's persona side by side, once at least one buddy has one. */
 function Crew({ me, buddies }: { me?: PersonaId; buddies: { id: string; name: string; persona: string }[] }) {
   const known = buddies.filter((b) => b.persona in PERSONAS);
@@ -337,10 +333,12 @@ function Crew({ me, buddies }: { me?: PersonaId; buddies: { id: string; name: st
       <h2 className="h-card px-2">Your crew</h2>
       <ul className="mt-3 flex gap-1 overflow-x-auto pb-1">
         {people.map((p) => (
-          <li key={p.id} className="flex w-[5.25rem] flex-none flex-col items-center text-center">
-            <PersonaFace id={p.persona} size={72} />
-            <span className="mt-1 block w-full truncate text-sm font-bold">{p.name}</span>
-            <span className="muted block w-full truncate text-xs">{PERSONAS[p.persona as PersonaId].name}</span>
+          <li key={p.id} className="w-[5.25rem] flex-none">
+            <Link href={p.id === "me" ? "/persona" : `/buddy?u=${p.id}`} className="flex flex-col items-center text-center">
+              <PersonaFace id={p.persona} size={72} />
+              <span className="mt-1 block w-full truncate text-sm font-bold">{p.name}</span>
+              <span className="muted block w-full truncate text-xs">{PERSONAS[p.persona as PersonaId].name}</span>
+            </Link>
           </li>
         ))}
       </ul>
